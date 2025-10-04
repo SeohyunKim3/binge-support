@@ -20,7 +20,7 @@ export default function LoginPage() {
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setErrorMsg(error.message)
-      else alert('Check your email to confirm your account!')
+      else alert('이메일로 인증 확인 절차가 전송되었어요!')
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setErrorMsg(error.message)
@@ -32,24 +32,24 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <div className="auth-card">
-        <h1 className="auth-title">{isSignUp ? 'Create an Account' : 'Welcome Back'}</h1>
+        <h1 className="auth-title">{isSignUp ? '기록장 만들기' : '오늘도 오셨군요!'}</h1>
         <p className="auth-subtle">
           {isSignUp
-            ? 'Start your journey toward mindful recovery.'
-            : 'Sign in to continue your reflection.'}
+            ? '뭐든 빨리 만들고 기록해보세요'
+            : '로그인하고 기록장 입장하기'}
         </p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <input
             type="email"
-            placeholder="Email address"
+            placeholder="이메일 주소"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -59,22 +59,22 @@ export default function LoginPage() {
           {errorMsg && <div className="auth-error">{errorMsg}</div>}
 
           <button type="submit" className="btn" disabled={loading}>
-            {loading ? 'Please wait…' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading ? 'Please wait…' : isSignUp ? '싸인 업' : '싸인 인'}
           </button>
         </form>
 
         <p className="auth-toggle">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isSignUp ? '기록장이 이미 있으신가요?' : "기록장이 없으신가요?"}{' '}
           <button
             type="button"
             className="link"
             onClick={() => setIsSignUp(!isSignUp)}
           >
-            {isSignUp ? 'Sign in' : 'Sign up'}
+            {isSignUp ? '싸인 인' : '싸인 업'}
           </button>
         </p>
         <p style={{ textAlign: 'right', marginTop: '-4px' }}>
-  <a href="/reset" className="link">Forgot password?</a>
+  <a href="/reset" className="link">비밀번호를 잊으셨나요??</a>
 </p>
       </div>
     </main>
