@@ -57,7 +57,7 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: 720, margin: '40px auto', fontFamily: 'system-ui' }}>
-      <h1>Dolla (MVP))</h1>
+      <h1>Dolla (MVP)</h1>
       <p>Private space to log triggers & feelings.</p>
 
       <p>
