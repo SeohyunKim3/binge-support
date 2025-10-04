@@ -208,6 +208,9 @@ export default function DashboardPage() {
                           {it.is_public ? 'Unpublish' : 'Publish'}
                         </button>
                       </div>
+                      <p>  </p>
+                      <p>  </p>
+                      <p>  </p>
                     </li>
                   ))}
                 </ul>
