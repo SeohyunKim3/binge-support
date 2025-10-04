@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabaseClient' // adjust if needed
+import { supabase } from '../../lib/supabaseClient' // adjust path if needed
 
 type Entry = {
   id: string
@@ -71,6 +71,34 @@ export default function DashboardPage() {
     if (!error) setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: makePublic } : e))
   }
 
+  // ---------- Date grouping helpers ----------
+  function toDateKey(iso: string, timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone) {
+    const d = new Date(iso)
+    const y = new Intl.DateTimeFormat('en-CA', { year: 'numeric', timeZone }).format(d)
+    const m = new Intl.DateTimeFormat('en-CA', { month: '2-digit', timeZone }).format(d)
+    const day = new Intl.DateTimeFormat('en-CA', { day: '2-digit', timeZone }).format(d)
+    return `${y}-${m}-${day}`
+  }
+
+  function formatDateHeader(key: string, locale = 'ko-KR') {
+    const [y, m, d] = key.split('-').map(Number)
+    const date = new Date(Date.UTC(y, m - 1, d))
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+    }).format(date)
+  }
+
+  const { grouped, sortedDays } = useMemo(() => {
+    const g: Record<string, Entry[]> = entries.reduce((acc, it) => {
+      const k = toDateKey(it.created_at)
+      ;(acc[k] ??= []).push(it)
+      return acc
+    }, {} as Record<string, Entry[]>)
+    Object.values(g).forEach(list => list.sort((a, b) => (a.created_at < b.created_at ? 1 : -1)))
+    const days = Object.keys(g).sort((a, b) => (a < b ? 1 : -1))
+    return { grouped: g, sortedDays: days }
+  }, [entries])
+
   if (loading) return <main style={{ maxWidth: 720, margin: '40px auto' }}>Loading…</main>
 
   return (
@@ -91,7 +119,7 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {/* Journal writing area */}
+      {/* New entry area */}
       <section style={{ marginTop: 10 }}>
         <textarea
           rows={6}
@@ -121,33 +149,47 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Entry list */}
+      {/* Grouped entries by date */}
       <section style={{ marginTop: 30 }}>
-        {entries.length === 0 && <p>No entries yet.</p>}
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {entries.map((it) => (
-            <li key={it.id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <small style={{ color: '#666' }}>
-                  {new Date(it.created_at).toLocaleString()}
-                </small>
-                <small style={{ color: it.is_public ? '#0a7' : '#667' }}>
-                  {it.is_public ? '[ PUBLISHED ]' : '[ PRIVATE ]'}
-                </small>
-              </div>
+        {sortedDays.length === 0 && <p>No entries yet.</p>}
 
-              <p style={{ margin: '6px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
+        {sortedDays.map((dayKey) => (
+          <div key={dayKey} style={{ margin: '24px 0' }}>
+            <h4 style={{
+              margin: '0 0 8px',
+              borderLeft: '4px solid #111',
+              paddingLeft: '8px',
+              fontWeight: 600
+            }}>
+              {formatDateHeader(dayKey)}
+            </h4>
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
-                <button type="button" onClick={() => removeEntry(it.id)}>Delete</button>
-                <button type="button" onClick={() => togglePublic(it.id, !(it.is_public ?? false))}>
-                  {it.is_public ? 'Unpublish' : 'Publish'}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {grouped[dayKey].map((it, idx) => (
+                <li key={it.id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <small style={{ color: '#666' }}>
+                      ENTRY NO. {idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </small>
+                    <small style={{ color: it.is_public ? '#0a7' : '#667' }}>
+                      {it.is_public ? '[ PUBLISHED ]' : '[ PRIVATE ]'}
+                    </small>
+                  </div>
+
+                  <p style={{ margin: '6px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
+
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
+                    <button type="button" onClick={() => removeEntry(it.id)}>Delete</button>
+                    <button type="button" onClick={() => togglePublic(it.id, !(it.is_public ?? false))}>
+                      {it.is_public ? 'Unpublish' : 'Publish'}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </section>
     </main>
   )
