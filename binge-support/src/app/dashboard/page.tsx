@@ -186,7 +186,7 @@ const unresolvedSorted = useMemo(() => {
     <main
       style={{
         minHeight: '100vh',
-        position: 'fixed',
+        position: 'absolute',
         backgroundImage: "url('/journal-bg.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
