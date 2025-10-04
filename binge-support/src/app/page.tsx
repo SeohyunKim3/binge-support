@@ -1,138 +1,97 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabaseClient' // ← adjust if yours is at src/lib
+import { supabase } from '../lib/supabaseClient'
+
+type Entry = {
+  id: string
+  user_id: string
+  content: string
+  created_at: string
+  is_public?: boolean
+}
 
 export default function Home() {
   const router = useRouter()
+  const [session, setSession] = useState<any>(null)
+  const [entries, setEntries] = useState<Entry[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // form state
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPw, setShowPw] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-
-  // keep UI in sync with auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email ?? null)
+      setSession(data.session)
+      if (data.session) {
+        loadEntries()
+      }
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUserEmail(session?.user?.email ?? null)
-    })
-    return () => sub.subscription.unsubscribe()
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setErr(null)
-    if (!email || !password) return setErr('Email and password are required.')
-    setLoading(true)
+  async function loadEntries() {
+    const { data, error } = await supabase
+      .from('entries')
+      .select('id, user_id, content, created_at, is_public')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(50)
 
-    try {
-      if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: 'http://localhost:3000' },
-        })
-        if (error) throw error
-        // By default, email confirmation may be required.
-        // After confirming via the email link, the user can sign in.
-        alert('Account created. Check your email to confirm your address.')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
-        router.push('/dashboard')
-      }
-    } catch (e: any) {
-      console.error(e)
-      setErr(e?.message ?? 'Something went wrong')
-    } finally {
-      setLoading(false)
+    if (!error && data) {
+      setEntries(data as Entry[])
     }
+    setLoading(false)
   }
 
   async function signOut() {
     await supabase.auth.signOut()
+    router.replace('/')
+  }
+
+  if (!session) {
+    return (
+      <main style={{ maxWidth: 720, margin: '40px auto' }}>
+        <h1>Binge Support (MVP)</h1>
+        <p>Please sign in.</p>
+      </main>
+    )
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: '60px auto', fontFamily: 'system-ui' }}>
+    <main style={{ maxWidth: 720, margin: '40px auto', fontFamily: 'system-ui' }}>
       <h1>Binge Support (MVP)</h1>
-      <p style={{ color: '#666', marginTop: 8 }}>
-        Private space to log triggers & feelings. This app is not a substitute for professional care.
+      <p>Private space to log triggers & feelings. This app is not a substitute for professional care.</p>
+
+      <p>
+        Signed in as <strong>{session.user.email}</strong>
       </p>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => router.push('/dashboard')}>Go to my journal</button>
+        <button onClick={signOut}>Sign out</button>
+      </div>
 
-      {!userEmail ? (
-        <section style={{ marginTop: 24 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <button
-              onClick={() => setMode('signin')}
-              style={{ padding: '6px 10px', background: mode === 'signin' ? '#000' : '#eee', color: mode === 'signin' ? '#fff' : '#000' }}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => setMode('signup')}
-              style={{ padding: '6px 10px', background: mode === 'signup' ? '#000' : '#eee', color: mode === 'signup' ? '#fff' : '#000' }}
-            >
-              Sign up
-            </button>
-          </div>
+      <hr style={{ margin: '32px 0' }} />
 
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 10, maxWidth: 380 }}>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-              style={{ padding: 10 }}
-            />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type={showPw ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                required
-                style={{ padding: 10, flex: 1 }}
-              />
-              <button type="button" onClick={() => setShowPw((v) => !v)} style={{ padding: '0 10px' }}>
-                {showPw ? 'Hide' : 'Show'}
-              </button>
-            </div>
+      <h2>Community feed</h2>
+      <p style={{ color: '#666' }}>Published journals from the community:</p>
 
-            {err && <div style={{ color: 'crimson' }}>{err}</div>}
-
-            <button disabled={loading} type="submit" style={{ padding: 10 }}>
-              {loading ? (mode === 'signup' ? 'Creating…' : 'Signing in…') : mode === 'signup' ? 'Create account' : 'Sign in'}
-            </button>
-          </form>
-        </section>
+      {loading ? (
+        <p>Loading…</p>
       ) : (
-        <section style={{ marginTop: 24 }}>
-          <p>Signed in as <b>{userEmail}</b></p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => router.push('/dashboard')}>Go to my journal</button>
-            <button onClick={signOut}>Sign out</button>
-          </div>
-        </section>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {entries.map((it) => (
+            <li key={it.id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
+              <small>{new Date(it.created_at).toLocaleString()}</small>
+              <p style={{ margin: '6px 0 0' }}>{it.content}</p>
+            </li>
+          ))}
+          {!entries.length && <li>No public entries yet.</li>}
+        </ul>
       )}
 
       <hr style={{ margin: '32px 0' }} />
-      <h4>Immediate help</h4>
-      <p>If you feel you might hurt yourself or others, please contact emergency services immediately.</p>
+      <h3>Immediate help</h3>
+      <p>
+        If you feel you might hurt yourself or others, please contact emergency services immediately.
+      </p>
     </main>
   )
 }
