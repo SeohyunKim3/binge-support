@@ -249,12 +249,6 @@ const unresolvedSorted = useMemo(() => {
             )}
 
             <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end', gap: 8 }}>
-              <button
-                className="btn-ghost"
-                onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
-              >
-                이만 나가보기
-              </button>
             </div>
           </div>
         </div>
@@ -451,4 +445,31 @@ const unresolvedSorted = useMemo(() => {
       )}
     </main>
   )
+  {/* 페이지 맨 아래 로그아웃 버튼 */}
+<div style={{ marginTop: 40, textAlign: 'center' }}>
+  <button
+    className="btn-ghost"
+    onClick={async () => {
+      await supabase.auth.signOut();
+      router.replace('/');
+    }}
+    style={{
+      marginTop: 24,
+      color: '#6b6b6b',
+      fontSize: '14px',
+      border: '1px solid #ccc',
+      padding: '8px 16px',
+      borderRadius: '9999px',
+      transition: 'all 0.2s ease',
+    }}
+    onMouseOver={(e) => {
+      e.currentTarget.style.background = '#f5f5f5';
+    }}
+    onMouseOut={(e) => {
+      e.currentTarget.style.background = 'transparent';
+    }}
+  >
+    이만 나가보기
+  </button>
+</div>
 }
