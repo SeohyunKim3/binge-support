@@ -49,3 +49,9 @@
   font-size: 16px;
 }
 .publish-row { display: inline-flex; align-items: center; gap: 8px; color: #333; }
+
+h4 {
+  font-weight: 700;
+  border-left: 4px solid #111;
+  padding-left: 8px;
+}
