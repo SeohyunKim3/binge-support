@@ -31,9 +31,24 @@ export default function EntryEditorPage() {
 
   async function save() {
     setSaving(true)
-    const { error } = await supabase.from('entries').update({ content: content.trim(), is_public: isPublic }).eq('id', id)
+    const { error } = await supabase
+      .from('entries')
+      .update({
+        content: content.trim(),
+        is_public: isPublic
+      })
+      .eq('id', id)
     setSaving(false)
-    if (error) alert(error.message)
+    if (error) return alert(error.message)
+
+    // ✅ 대시보드로 변경 사항 전송 (자동 갱신용)
+    window.dispatchEvent(
+      new CustomEvent('entry-updated', {
+        detail: { id, content: content.trim(), is_public: isPublic }
+      })
+    )
+
+    alert('저장 완료!')
   }
 
   if (loading) return <main className="paper-page"><div className="paper-wrap">Loading…</div></main>

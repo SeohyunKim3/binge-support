@@ -34,13 +34,32 @@ function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact 
   // 기존
   // 로컬 상태(보기/편집/현재 엔트리)
   const [entry, setEntry] = useState<Entry>(it);
+  const [entries, setEntries] = useState<Entry[]>([])  // ✅ 여기에 선언되어 있어야 함
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
 
   // 부모에서 it이 갱신되면 로컬 상태도 동기화
   useEffect(() => {
-    setEntry(it);
-  }, [it.id, it.is_resolved, it.is_public, it.content, it.details_md]);
+    function handleUpdated(e: Event) {
+      const detail = (e as CustomEvent).detail as {
+        id: string
+        content?: string
+        is_public?: boolean
+        details_md?: string
+      }
+      if (!detail?.id) return
+  
+      setEntries((prev: Entry[]) =>
+        prev.map((it: Entry) =>
+          it.id === detail.id ? { ...it, ...detail } : it
+        )
+      )
+    }
+  
+    window.addEventListener('entry-updated', handleUpdated as EventListener)
+    return () =>
+      window.removeEventListener('entry-updated', handleUpdated as EventListener)
+  }, [])
 
   // 디테일 저장
   const saveDetails = (md: string) => {
@@ -190,6 +209,8 @@ function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact 
 export default function DashboardPage() {
   const router = useRouter()
 
+  
+
   const [username, setUsername] = useState('')
   const [content, setContent] = useState('')
   const [publish, setPublish] = useState(false)
@@ -206,6 +227,8 @@ export default function DashboardPage() {
   const [nameError, setNameError] = useState<string | null>(null)
 
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false)
+
+  
 
   useEffect(() => {
     ;(async () => {
