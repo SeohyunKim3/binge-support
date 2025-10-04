@@ -1,16 +1,23 @@
-'use client';
-import { useMemo } from 'react';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+'use client'
 
-marked.setOptions({ breaks: true, gfm: true });
+import React from 'react'
+import ReactMarkdown from 'react-markdown'
 
-export default function Markdown({ md, className }: { md?: string|null, className?: string }) {
-  const html = useMemo(() => {
-    if (!md) return '';
-    const raw = marked.parse(md);
-    return DOMPurify.sanitize(typeof raw === 'string' ? raw : raw.toString());
-  }, [md]);
-
-  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+export default function Markdown({ content }: { content: string }) {
+  return (
+    <div
+      style={{
+        background: '#f9faf9',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        border: '1px solid #e3e8e3',
+        fontSize: '14px',
+        lineHeight: 1.6,
+        whiteSpace: 'pre-wrap',
+        color: '#2d2d2d',
+      }}
+    >
+      <ReactMarkdown>{content}</ReactMarkdown>
+    </div>
+  )
 }

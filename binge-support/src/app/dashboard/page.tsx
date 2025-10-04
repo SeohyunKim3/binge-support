@@ -30,6 +30,8 @@ export default function DashboardPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const [seeds, setSeeds] = useState<number>(0)
   const [flowers, setFlowers] = useState<number>(0)  // ✅ 꽃 개수
 const [canCollect, setCanCollect] = useState<boolean>(false)
@@ -184,6 +186,26 @@ function MindfulTimer() {
       setLoading(false)
     })()
   }, [router])
+
+  async function updateDetails(entryId: string, md: string) {
+    const { error } = await supabase
+      .from('entries')
+      .update({ details_md: md })
+      .eq('id', entryId);
+  
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  
+    // 로컬 상태 동기화
+    setEntries(prev =>
+      prev.map(e => (e.id === entryId ? { ...e, details_md: md } : e))
+    );
+  
+    // 닫기 (원하면 유지해도 됨)
+    setExpandedId(null);
+  }
 
   async function loadProfile(userId: string) {
     const { data, error} = await supabase
@@ -611,10 +633,14 @@ const unresolvedSorted = useMemo(() => {
               {it.is_public ? '공유됨' : '🤫프라이빗'}
             </span>
           </div>
-
+          <div
+  onClick={() => setExpandedId(expandedId === it.id ? null : it.id)}
+  style={{ cursor: 'pointer' }}
+>
           <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>
             {it.content}
           </p>
+          </div>
 
           <div className="row small-btns">
             <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>✍🏻</button>
@@ -730,15 +756,16 @@ const unresolvedSorted = useMemo(() => {
       </div>
 
       {/* 🔽 디테일 에디터 (처음엔 에디터로 시작) */}
-      {editing && (
-        <div style={{ marginTop: 10 }}>
-          <DetailsEditor
-            initial={entry.details_md ?? ''}
-            onSave={saveDetails}
-            onCancel={() => setEditing(false)}
-          />
-        </div>
-      )}
+      {expandedId === it.id && (
+  <div style={{ marginTop: 10 }}>
+    <DetailsEditor
+      initial={it.details_md ?? ''}                         // ✅ 올바른 prop
+      onSave={(text: string) => updateDetails(it.id, text)} // ✅ 타입 명시
+      onCancel={() => setExpandedId(null)}
+    />
+  </div>
+)}
+      
 
       {/* 🔽 디테일 뷰어(접히는 영역) */}
       {!editing && entry.details_md && open && (
@@ -752,8 +779,7 @@ const unresolvedSorted = useMemo(() => {
           }}
           onClick={(e) => e.stopPropagation()} // 뷰어 영역 클릭 시 본문 토글 방지
         >
-          <Markdown md={entry.details_md} />
-
+<Markdown content={it.details_md ?? ''} />
           {/* 디테일 수정 버튼 (선택) */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <button
