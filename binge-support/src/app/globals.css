@@ -189,7 +189,7 @@ button {
 .btn-mini2 {
   background: var(--paper);
   color: var(--ink-dim);
-  border: 1px solid var(--border);
+  border: 'none';
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 13px;

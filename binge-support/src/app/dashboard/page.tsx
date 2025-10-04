@@ -404,7 +404,7 @@ const unresolvedSorted = useMemo(() => {
                   조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-                  {it.is_public ? 'Published' : 'Private'}
+                  {it.is_public ? '공유됨' : '🤫프라이빗'}
                 </span>
               </div>
 
