@@ -11,21 +11,22 @@ export default function TransitionProvider({
   const pathname = usePathname()
 
   return (
-     <AnimatePresence mode="wait">
-       <motion.div
-         key={pathname}
-         initial={{ rotateY: 10, opacity: 0, x: 40 }}
-         animate={{ rotateY: 0, opacity: 1, x: 0 }}
-         exit={{ rotateY: -10, opacity: 0, x: -40 }}
-         transition={{ duration: 0.5, ease: [0.45, 0, 0.55, 1] }}
-         style={{
-           transformOrigin: 'center',
-           perspective: 1000,
-           minHeight: '100vh',
-         }}
-       >
-         {children}
-       </motion.div>
-     </AnimatePresence>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.33, 1, 0.68, 1],
+        }}
+        style={{
+          minHeight: '100vh',
+        }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   )
 }
