@@ -144,7 +144,7 @@ const unresolvedSorted = useMemo(() => {
   }
 
   async function removeEntry(id: string) {
-    if (!confirm('Delete this entry?')) return
+    if (!confirm('기록을 지울까요?')) return
     const { error } = await supabase.from('entries').delete().eq('id', id)
     if (!error) setEntries(prev => prev.filter(e => e.id !== id))
   }
@@ -186,11 +186,12 @@ const unresolvedSorted = useMemo(() => {
     <main
       style={{
         minHeight: '100vh',
-        position: 'relative',
+        position: 'fixed',
         backgroundImage: "url('/journal-bg.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        opacity: '100%',
       }}
     >
       <div
