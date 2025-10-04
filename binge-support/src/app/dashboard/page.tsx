@@ -186,7 +186,6 @@ export default function DashboardPage() {
                 <ul className="list">
                   {grouped[dayKey].map((it, idx) => (
                     <li key={it.id} className="item">
-                     <p>  </p>
                       <div className="item-head">
                         <span className="item-time">
                           조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -202,12 +201,6 @@ export default function DashboardPage() {
                       <div className="row small-btns">
                         <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
                         <button className="btn-mini" onClick={() => removeEntry(it.id)}>삭제</button>
-                        <button
-                          className="btn-mini"
-                          onClick={() => togglePublic(it.id, !(it.is_public ?? false))}
-                        >
-                          {it.is_public ? 'Unpublish' : 'Publish'}
-                        </button>
                       </div>
                       <p>  </p>
                       <p>  </p>
