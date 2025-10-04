@@ -31,6 +31,14 @@ const [canCollect, setCanCollect] = useState<boolean>(false)
   const [needName, setNeedName] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
+
+  // 로컬 타임존 기준 YYYY-MM-DD 문자열
+function todayLocalKey() {
+  const d = new Date()
+  // toISOString()이 UTC 기준이라 오프셋만큼 보정해주고 잘라냄
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 10) // 'YYYY-MM-DD'
+}
   const [nameError, setNameError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,15 +61,10 @@ const [canCollect, setCanCollect] = useState<boolean>(false)
         setUsername(data.username ?? '')
         setSeeds(data.seeds ?? 0)
     
-        const last = data.last_collected ? new Date(data.last_collected) : null
-        const today = new Date()
-        const isNewDay =
-          !last ||
-          last.getFullYear() !== today.getFullYear() ||
-          last.getMonth() !== today.getMonth() ||
-          last.getDate() !== today.getDate()
-    
-        setCanCollect(isNewDay)
+        const last: string | null = data.last_collected ?? null // 'YYYY-MM-DD' or null
+        const today = todayLocalKey()
+        const can = !last || last !== today
+        setCanCollect(can)
       }
 
     const name = data?.username ?? ''
@@ -72,11 +75,10 @@ const [canCollect, setCanCollect] = useState<boolean>(false)
 
   async function collectSeed() {
     if (!canCollect) return
-  
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
   
-    // 폭죽 🎉
+    // 🎉 confetti (그대로)
     confetti({
       particleCount: 100,
       spread: 80,
@@ -84,18 +86,20 @@ const [canCollect, setCanCollect] = useState<boolean>(false)
       colors: ["#a7d7a9", "#7fc8a9", "#e2f1e7", "#8fcbbc"],
     })
   
-    // 씨앗 수 + 날짜 업데이트
-    const today = new Date().toISOString().split("T")[0]
+    const today = todayLocalKey()
+  
+    // DB 업데이트
     const { error } = await supabase
       .from('profiles')
       .update({
         seeds: seeds + 1,
-        last_collected: today,
+        last_collected: today, // ✅ 로컬 'YYYY-MM-DD' 저장
       })
       .eq('id', user.id)
   
     if (!error) {
-      setSeeds(seeds + 1)
+      // 낙관적 업데이트
+      setSeeds(s => s + 1)
       setCanCollect(false)
     }
   }
