@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 
 type Entry = {
   id: string
@@ -13,6 +14,7 @@ type Entry = {
 export default function SocialPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     (async () => {
@@ -37,15 +39,25 @@ export default function SocialPage() {
     <main className="container">
       <div className="card" style={{ background: 'transparent', boxShadow: 'none' }}>
         <h2 className="page-title" style={{ marginBottom: 8 }}>Community Feed</h2>
-        <p className="subtle">See what others have shared</p>
+        <p className="subtle">Explore reflections shared by others</p>
 
         <div className="gallery-grid">
           {entries.map((it) => (
             <div key={it.id} className="gallery-card">
-              <div className="gallery-user">@{it.profiles?.username ?? 'anonymous'}</div>
+              <button
+                className="gallery-user link"
+                onClick={() =>
+                  router.push(`/user/${encodeURIComponent(it.profiles?.username ?? 'anonymous')}`)
+                }
+              >
+                @{it.profiles?.username ?? 'anonymous'}
+              </button>
               <p className="gallery-text">{it.content}</p>
               <div className="gallery-date">
-                {new Date(it.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {new Date(it.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </div>
             </div>
           ))}
