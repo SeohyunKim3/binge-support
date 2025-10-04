@@ -30,6 +30,21 @@ export default function RootLayout({
         <TransitionProvider>
           {children}
         </TransitionProvider>
+        <footer
+          style={{
+            textAlign: "center",
+            fontSize: "12px",
+            color: "#a1a1a1",
+            padding: "20px 0",
+            letterSpacing: "0.5px",
+            borderTop: "1px solid rgba(0,0,0,0.05)",
+            fontFamily: "var(--font-geist-mono)",
+            background: "rgba(255,255,255,0.4)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          © SoulKim 2025
+        </footer>
       </body>
     </html>
   );
