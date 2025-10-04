@@ -435,12 +435,8 @@ const unresolvedSorted = useMemo(() => {
   </>
 )}
 </div>
-          </div>
-        </div>
-        
-      )}
         {/* 페이지 맨 아래 로그아웃 버튼 */}
-<div style={{ marginTop: 40, textAlign: 'center' }}>
+        <div style={{ marginTop: 40, textAlign: 'center' }}>
   <button
     className="btn-ghost"
     onClick={async () => {
@@ -466,6 +462,11 @@ const unresolvedSorted = useMemo(() => {
     이만 나가보기
   </button>
 </div>
+          </div>
+        </div>
+        
+      )}
+
     </main>
     
   )
