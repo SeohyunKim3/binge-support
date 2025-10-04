@@ -42,12 +42,12 @@ export default function EntryEditorPage() {
     <main className="paper-page">
       <div className="paper-wrap">
         <div className="paper-bar">
-          <button className="btn-ghost2" onClick={() => router.push('/dashboard')}>← 이전으로</button>
+          <button className="btn-ghost" onClick={() => router.push('/dashboard')}>← 이전으로</button>
           <div className="paper-actions">
-            <button className="btn" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+            <button className="btn" onClick={save} disabled={saving}>{saving ? '저장중...' : '저장'}</button>
             <label className="subtle" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
-              Publish to community
+              🪄 모두와 공유하기
             </label>
           </div>
         </div>
