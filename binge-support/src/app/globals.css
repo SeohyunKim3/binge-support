@@ -354,11 +354,9 @@ content {
 .tag--ok {
   background: #e8f7ec;     /* 연한 초록 */
   color: #2e7d32;          /* 진한 초록 글씨 */
-  border-color: #b6e2c0;
 }
 
 .tag--todo {
   background: #ffecec;     /* 연한 빨강 */
   color: #c62828;          /* 진한 빨강 글씨 */
-  border-color: #ffb3b3;
 }
