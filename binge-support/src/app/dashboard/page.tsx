@@ -271,7 +271,7 @@ const unresolvedSorted = useMemo(() => {
       }}
       title="미해결만 보기 토글"
     >
-      {showUnresolvedOnly ? '미해결만 보기: 켜짐' : '미해결만 보기: 꺼짐'}
+      {showUnresolvedOnly ? '미해결만 보기' : '해결만 보기'}
     </button>
                 <button
                   className="btn-ghost"
@@ -387,7 +387,7 @@ const unresolvedSorted = useMemo(() => {
               className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
               style={{ marginLeft: 6 }}
             >
-              {it.is_resolved ? '해결됨' : '미해결'}
+              {it.is_resolved ? '-' : '*'}
             </span>
           </div>
         </li>
