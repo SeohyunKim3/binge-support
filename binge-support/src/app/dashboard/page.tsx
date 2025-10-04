@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
 import confetti from "canvas-confetti";
 
+
+
 type Entry = {
   id: string
   user_id: string
@@ -41,24 +43,52 @@ function todayLocalKey() {
   return d.toISOString().slice(0, 10) // 'YYYY-MM-DD'
 }
 
+// ✅ MindfulTimer (hooks 직접 사용 버전)
 function MindfulTimer() {
-  const [timeLeft, setTimeLeft] = useState(30); // 30초 기본
-  const [active, setActive] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(30);   // 30초
+  const [active, setActive] = useState(true);     // 기본 켜짐
 
-  // localStorage 체크해서 기본값 불러오기
+  // 저장된 설정 불러오기 (꺼둔 적 있으면 비활성)
   useEffect(() => {
-    const saved = localStorage.getItem("disableTimer");
-    if (saved === "true") setActive(false);
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('disableTimer');
+    if (saved === 'true') setActive(false);
   }, []);
 
+  // 카운트다운
   useEffect(() => {
     if (!active || timeLeft <= 0) return;
-    const t = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    const t = setInterval(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearInterval(t);
   }, [active, timeLeft]);
 
-  if (!active) return null;
+  // 타이머 꺼져 있을 때는 "다시 켜기" 버튼만 노출
+  if (!active) {
+    return (
+      <div style={{ textAlign: 'center', marginBottom: 12 }}>
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') localStorage.removeItem('disableTimer');
+            setTimeLeft(30);
+            setActive(true);
+          }}
+          style={{
+            background: 'none',
+            border: '1px solid #b5c9b5',
+            borderRadius: 9999,
+            padding: '6px 12px',
+            fontSize: 13,
+            cursor: 'pointer',
+            color: '#4d7253',
+          }}
+        >
+          ⏯ 타이머 다시 켜기
+        </button>
+      </div>
+    );
+  }
 
+  // 👉 return 부분 (아기자기한 원형 타이머)
   return (
     <div style={{ textAlign: "center", marginBottom: "16px", position: "relative" }}>
       {timeLeft > 0 ? (
@@ -93,11 +123,11 @@ function MindfulTimer() {
               }
             `}
           </style>
-  
+
           <p style={{ marginTop: "10px", fontSize: "14px", color: "#678a68" }}>
             오늘의 마음을 준비하는 중이에요 🫖
           </p>
-  
+
           <button
             style={{
               marginTop: "8px",
@@ -116,7 +146,7 @@ function MindfulTimer() {
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             onClick={() => {
               setActive(false);
-              localStorage.setItem("disableTimer", "true");
+              if (typeof window !== 'undefined') localStorage.setItem("disableTimer", "true");
             }}
           >
             ⏸️ 타이머 끄기
@@ -469,6 +499,7 @@ const unresolvedSorted = useMemo(() => {
         // ===== 이름이 있으면 기존 저널 UI 출력 =====
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div className="card">
+          <MindfulTimer />
             {/* Header */}
             <header className="page-head">
               <h2 className="page-title">나의 기록장</h2>
