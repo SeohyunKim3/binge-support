@@ -225,3 +225,75 @@ button {
   color: var(--ink-dim);
   text-align: right;
 }
+
+/* === Auth Pages (Login / Signup) === */
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7f9f8 0%, #eaf2ef 100%);  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 16px;
+}
+
+.auth-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-width: 400px;
+  width: 100%;
+  padding: 36px 32px 40px;
+  text-align: center;
+  animation: fadeInUp 0.6s ease both;
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.auth-subtle {
+  font-size: 14px;
+  color: var(--ink-dim);
+  margin-bottom: 28px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: 13px;
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: left;
+}
+
+.auth-toggle {
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.link:hover {
+  opacity: 0.7;
+}
