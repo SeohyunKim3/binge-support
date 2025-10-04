@@ -186,6 +186,7 @@ export default function DashboardPage() {
                 <ul className="list">
                   {grouped[dayKey].map((it, idx) => (
                     <li key={it.id} className="item">
+                     <p>  </p>
                       <div className="item-head">
                         <span className="item-time">
                           조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -208,6 +209,8 @@ export default function DashboardPage() {
                           {it.is_public ? 'Unpublish' : 'Publish'}
                         </button>
                       </div>
+                      <p>  </p>
+                      <p>  </p>
                       <p>  </p>
                       <p>  </p>
                       <p>  </p>
