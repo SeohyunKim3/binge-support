@@ -41,7 +41,7 @@ export default function CommunityFeedPage() {
       <div className="card" style={{ background: 'transparent', boxShadow: 'none', padding: 16 }}>
         {/* 돌아가기 버튼 (저널로) */}
         <button
-          className="btn-ghost"
+          className="btn-ghost2"
           style={{ marginBottom: 12 }}
           onClick={() => router.push('/dashboard')}
         >

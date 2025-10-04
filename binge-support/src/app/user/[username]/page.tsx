@@ -52,8 +52,8 @@ export default function UserJournalPage() {
   return (
     <main className="container">
       <div className="card" style={{ background: 'transparent', boxShadow: 'none' }}>
-        <button className="btn-ghost" style={{ marginBottom: '12px' }} onClick={() => router.push('/social')}>
-          ← 우리들의 조각으로 돌아가기
+        <button className="btn-ghost2" style={{ marginBottom: '12px' }} onClick={() => router.push('/social')}>
+          ← 돌아가기
         </button>
 
         <h2 className="page-title" style={{ marginBottom: 8 }}>
