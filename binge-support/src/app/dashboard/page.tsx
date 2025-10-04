@@ -16,8 +16,7 @@ type Entry = {
 }
 
 export default function DashboardPage() {
-  return (
-    <main>
+
       <div className="container">
         <div className="card">
           {/* 마인드풀 타이머 */}
@@ -28,9 +27,7 @@ export default function DashboardPage() {
           ...
         </div>
       </div>
-    </main>
-  );
-  
+
   const router = useRouter()
 
   const [username, setUsername] = useState('')
