@@ -24,6 +24,9 @@ export default function DashboardPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [seeds, setSeeds] = useState<number>(0)
+const [canCollect, setCanCollect] = useState<boolean>(false)
+
   // 이름 설정용 상태
   const [needName, setNeedName] = useState(false)
   const [nameInput, setNameInput] = useState('')
@@ -42,14 +45,59 @@ export default function DashboardPage() {
   async function loadProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, seeds, last_collected')
       .eq('id', userId)
       .maybeSingle()
+
+      if (data) {
+        setUsername(data.username ?? '')
+        setSeeds(data.seeds ?? 0)
+    
+        const last = data.last_collected ? new Date(data.last_collected) : null
+        const today = new Date()
+        const isNewDay =
+          !last ||
+          last.getFullYear() !== today.getFullYear() ||
+          last.getMonth() !== today.getMonth() ||
+          last.getDate() !== today.getDate()
+    
+        setCanCollect(isNewDay)
+      }
 
     const name = data?.username ?? ''
     setUsername(name)
     setNeedName(!name)          // 이름 없으면 이름 설정 카드 띄움
     setNameInput(name || '')    // 입력창 초기값
+  }
+
+  async function collectSeed() {
+    if (!canCollect) return
+  
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+  
+    // 폭죽 🎉
+    confetti({
+      particleCount: 100,
+      spread: 80,
+      origin: { y: 0.8 },
+      colors: ["#a7d7a9", "#7fc8a9", "#e2f1e7", "#8fcbbc"],
+    })
+  
+    // 씨앗 수 + 날짜 업데이트
+    const today = new Date().toISOString().split("T")[0]
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        seeds: seeds + 1,
+        last_collected: today,
+      })
+      .eq('id', user.id)
+  
+    if (!error) {
+      setSeeds(seeds + 1)
+      setCanCollect(false)
+    }
   }
 
   async function loadEntries(userId: string) {
@@ -498,6 +546,50 @@ const unresolvedSorted = useMemo(() => {
         </div>
         
       )}
+
+      {/* 🌱 씨앗 수집 UI */}
+<div
+  style={{
+    marginTop: 40,
+    textAlign: 'center',
+    paddingBottom: 80, // footer 위 공간 확보
+  }}
+>
+  {canCollect ? (
+    <button
+      onClick={collectSeed}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        animation: 'float 2s ease-in-out infinite',
+      }}
+      title="오늘의 씨앗 수집하기"
+    >
+      <span style={{ fontSize: 36 }}>🌱</span>
+      <p style={{ fontSize: 12, color: '#6b6b6b' }}>오늘의 씨앗 수집</p>
+    </button>
+  ) : (
+    <div style={{ color: '#9b9b9b', fontSize: 13, marginBottom: 10 }}>
+      오늘의 씨앗은 이미 모았어요 🌿
+    </div>
+  )}
+
+  {/* 씨앗 저장소 (하단 표시줄) */}
+  <div
+    style={{
+      marginTop: 20,
+      display: 'flex',
+      justifyContent: 'center',
+      gap: 4,
+      flexWrap: 'wrap',
+    }}
+  >
+    {Array.from({ length: seeds }).map((_, i) => (
+      <span key={i} style={{ fontSize: 22 }}>🌱</span>
+    ))}
+  </div>
+</div>
 
     </main>
     

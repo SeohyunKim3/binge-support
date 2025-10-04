@@ -360,3 +360,9 @@ content {
   color: #c62828;          /* 진한 빨강 글씨 */
   border: 'none'
 }
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
