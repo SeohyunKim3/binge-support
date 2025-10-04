@@ -32,9 +32,12 @@ export default function UserJournalPage() {
           id,
           content,
           created_at,
+          is_public,
+          is_deleted,
           profiles ( username )
         `)
         .eq('is_public', true)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false })
 
       if (!error && data) {
