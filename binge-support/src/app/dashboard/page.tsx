@@ -12,6 +12,7 @@ type Entry = {
   created_at: string
   is_public: boolean
   is_resolved: boolean
+  is_deleted: boolean
 }
 
 export default function DashboardPage() {
@@ -56,6 +57,7 @@ export default function DashboardPage() {
       .from('entries')
       .select('id, user_id, content, created_at, is_public, is_resolved')
       .eq('user_id', userId)
+      .eq('is_deleted', false)  
       .order('created_at', { ascending: false })
     setEntries((data ?? []) as Entry[])
   }
@@ -155,8 +157,10 @@ const unresolvedSorted = useMemo(() => {
 
   async function removeEntry(id: string) {
     if (!confirm('기록을 지울까요?')) return
-    const { error } = await supabase.from('entries').delete().eq('id', id)
-    if (!error) setEntries(prev => prev.filter(e => e.id !== id))
+    const { error } = await supabase    .from('entries')
+    .update({ is_deleted: true })
+    .eq('id', id)
+    if (!error) setEntries(prev => prev.filter(e => e.id !== id))  
   }
 
   async function togglePublic(id: string, makePublic: boolean) {
@@ -448,6 +452,7 @@ const unresolvedSorted = useMemo(() => {
 </div>
         {/* 페이지 맨 아래 로그아웃 버튼 */}
         <div style={{ marginTop: 40, textAlign: 'center' }}>
+        <button className="btn-ghost" onClick={() => router.push('/trash')}>휴지통 보기</button>
   <button
     className="btn-ghost"
     onClick={async () => {
