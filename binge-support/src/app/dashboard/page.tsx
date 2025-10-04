@@ -194,9 +194,11 @@ export default function DashboardPage() {
                           {it.is_public ? 'Published' : 'Private'}
                         </span>
                       </div>
-
+                      <p>  </p>
+                      <p>  </p>
+                      <p>  </p>
                       <p style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
-
+                      <p>  </p>
                       {/* compact buttons */}
                       <div className="row small-btns">
                         <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>

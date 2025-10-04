@@ -42,7 +42,7 @@ export default function EntryEditorPage() {
     <main className="paper-page">
       <div className="paper-wrap">
         <div className="paper-bar">
-          <button className="btn-ghost" onClick={() => router.push('/dashboard')}>← Back</button>
+          <button className="btn-ghost" onClick={() => router.push('/dashboard')}>← 이전으로</button>
           <div className="paper-actions">
             <button className="btn" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
             <label className="subtle" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
