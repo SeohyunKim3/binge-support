@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   const [seeds, setSeeds] = useState<number>(0)
+  const [flowers, setFlowers] = useState<number>(0)  // ✅ 꽃 개수
 const [canCollect, setCanCollect] = useState<boolean>(false)
 
   // 이름 설정용 상태
@@ -51,11 +52,39 @@ function todayLocalKey() {
   }, [router])
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase
+    const { data, error} = await supabase
       .from('profiles')
-      .select('username, seeds, last_collected')
+      .select('username, seeds, flowers, last_collected')
       .eq('id', userId)
       .maybeSingle()
+
+      if (error || !data) return
+
+      setUsername(data.username ?? '')
+      let s = data.seeds ?? 0
+      let f = data.flowers ?? 0
+    
+      // ✅ 7개 단위 자동 변환 (정규화)
+      if (s >= 7) {
+        const add = Math.floor(s / 7)
+        s = s % 7
+        f = f + add
+    
+        // DB 반영
+        await supabase
+          .from('profiles')
+          .update({ seeds: s, flowers: f })
+          .eq('id', userId)
+      }
+    
+      setSeeds(s)
+      setFlowers(f)
+    
+      // 오늘 수집 가능 여부
+      const last: string | null = data.last_collected ?? null
+      const today = todayLocalKey()
+      setCanCollect(!last || last !== today)
+    
 
       if (data) {
         setUsername(data.username ?? '')
@@ -66,43 +95,60 @@ function todayLocalKey() {
         const can = !last || last !== today
         setCanCollect(can)
       }
-
-    const name = data?.username ?? ''
-    setUsername(name)
-    setNeedName(!name)          // 이름 없으면 이름 설정 카드 띄움
-    setNameInput(name || '')    // 입력창 초기값
-  }
-
-  async function collectSeed() {
-    if (!canCollect) return
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-  
-    // 🎉 confetti (그대로)
-    confetti({
-      particleCount: 100,
-      spread: 80,
-      origin: { y: 0.8 },
-      colors: ["#a7d7a9", "#7fc8a9", "#e2f1e7", "#8fcbbc"],
-    })
-  
-    const today = todayLocalKey()
-  
-    // DB 업데이트
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        seeds: seeds + 1,
-        last_collected: today, // ✅ 로컬 'YYYY-MM-DD' 저장
-      })
-      .eq('id', user.id)
-  
-    if (!error) {
-      // 낙관적 업데이트
-      setSeeds(s => s + 1)
-      setCanCollect(false)
     }
-  }
+
+    async function collectSeed() {
+      if (!canCollect) return
+    
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+    
+      // 🎆 수집 축하(씨앗)
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.8 },
+        colors: ['#a7d7a9', '#7fc8a9', '#e2f1e7', '#8fcbbc'],
+      })
+    
+      const today = todayLocalKey()
+    
+      // 다음 상태 계산
+      const nextSeeds = seeds + 1
+      let newSeeds = nextSeeds
+      let newFlowers = flowers
+    
+      // ✅ 7개 이상이면 꽃으로 변환
+      if (nextSeeds >= 7) {
+        const add = Math.floor(nextSeeds / 7)
+        newFlowers += add
+        newSeeds = nextSeeds % 7
+    
+        // 🎆 꽃으로 승급 축하(색 살짝 바꿔줌)
+        confetti({
+          particleCount: 120,
+          spread: 90,
+          origin: { y: 0.7 },
+          colors: ['#ffc1e3', '#ff8fab', '#ffd6e7', '#ffe5f1'],
+        })
+      }
+    
+      // DB 업데이트 (씨앗/꽃/마지막 수집일)
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          seeds: newSeeds,
+          flowers: newFlowers,
+          last_collected: today,
+        })
+        .eq('id', user.id)
+    
+      if (!error) {
+        setSeeds(newSeeds)
+        setFlowers(newFlowers)
+        setCanCollect(false)
+      }
+    }
 
   async function loadEntries(userId: string) {
     const { data } = await supabase
@@ -579,20 +625,30 @@ const unresolvedSorted = useMemo(() => {
     </div>
   )}
 
-  {/* 씨앗 저장소 (하단 표시줄) */}
-  <div
-    style={{
-      marginTop: 20,
-      display: 'flex',
-      justifyContent: 'center',
-      gap: 4,
-      flexWrap: 'wrap',
-    }}
-  >
-    {Array.from({ length: seeds }).map((_, i) => (
-      <span key={i} style={{ fontSize: 22 }}>🌱</span>
-    ))}
-  </div>
+{/* 씨앗/꽃 저장소 */}
+<div
+  style={{
+    marginTop: 20,
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  }}
+  aria-label="나의 씨앗/꽃 저장소"
+  title="씨앗 7개를 모으면 꽃 1개가 됩니다"
+>
+  {/* 🌸 먼저 (꽃) */}
+  {Array.from({ length: flowers }).map((_, i) => (
+    <span key={`f-${i}`} style={{ fontSize: 22 }}>🌸</span>
+  ))}
+  {/* 🌱 남은 씨앗 */}
+  {Array.from({ length: seeds }).map((_, i) => (
+    <span key={`s-${i}`} style={{ fontSize: 22 }}>🌱</span>
+  ))}
+</div>
+<p style={{ fontSize: 12, color: '#8a8a8a', marginTop: 6 }}>
+  씨앗 7개를 모으면 🌸 꽃으로 바뀝니다.
+</p>
 </div>
 
     </main>
