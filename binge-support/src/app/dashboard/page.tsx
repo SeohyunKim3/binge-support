@@ -14,11 +14,18 @@ type Entry = {
 
 export default function DashboardPage() {
   const router = useRouter()
+
   const [username, setUsername] = useState('')
   const [content, setContent] = useState('')
   const [publish, setPublish] = useState(false)
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
+
+  // 이름 설정용 상태
+  const [needName, setNeedName] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
+  const [nameError, setNameError] = useState<string | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -30,8 +37,16 @@ export default function DashboardPage() {
   }, [router])
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('username').eq('id', userId).maybeSingle()
-    setUsername(data?.username ?? '')
+    const { data } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .maybeSingle()
+
+    const name = data?.username ?? ''
+    setUsername(name)
+    setNeedName(!name)          // 이름 없으면 이름 설정 카드 띄움
+    setNameInput(name || '')    // 입력창 초기값
   }
 
   async function loadEntries(userId: string) {
@@ -43,12 +58,59 @@ export default function DashboardPage() {
     setEntries((data ?? []) as Entry[])
   }
 
+  // ---------- 이름 저장 ----------
+  async function saveDisplayName() {
+    setNameError(null)
+    const raw = nameInput.trim()
+    // 간단한 유효성: 2~20자
+    if (raw.length < 2 || raw.length > 20) {
+      setNameError('이름은 2~20자 사이로 입력해 주세요.')
+      return
+    }
+
+    setNameSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setNameSaving(false); return }
+
+    // 중복 체크
+    const { data: taken } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', raw)
+      .maybeSingle()
+
+    if (taken && taken.id !== user.id) {
+      setNameSaving(false)
+      setNameError('이미 사용 중인 이름이에요. 다른 이름을 시도해 주세요.')
+      return
+    }
+
+    // upsert (id 충돌 시 업데이트)
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, username: raw }, { onConflict: 'id' })
+
+    setNameSaving(false)
+    if (error) {
+      setNameError(error.message)
+      return
+    }
+
+    setUsername(raw)
+    setNeedName(false)
+  }
+
+  // ---------- entry actions ----------
   async function createEntry() {
     const text = content.trim()
     if (!text) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { error } = await supabase.from('entries').insert({ user_id: user.id, content: text, is_public: publish })
+    const { error } = await supabase.from('entries').insert({
+      user_id: user.id,
+      content: text,
+      is_public: publish,
+    })
     if (error) return alert(error.message)
     setContent('')
     setPublish(false)
@@ -77,8 +139,9 @@ export default function DashboardPage() {
 
   function formatDateHeader(key: string, locale = 'ko-KR') {
     const [y, m, d] = key.split('-').map(Number)
-    return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
-      .format(new Date(Date.UTC(y, m - 1, d)))
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+    }).format(new Date(Date.UTC(y, m - 1, d)))
   }
 
   const { grouped, sortedDays } = useMemo(() => {
@@ -93,35 +156,73 @@ export default function DashboardPage() {
   if (loading) return null
 
   return (
-    // ✅ 배경 이미지 + 투명 오버레이 적용 (나머지 디자인/구조는 그대로)
+    // 배경 이미지 + 오버레이는 유지
     <main
       style={{
         minHeight: '100vh',
         position: 'relative',
-        backgroundImage: "url('/journal-bg.png')", // public/journal-bg.png 로 저장
+        backgroundImage: "url('/journal-bg.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* 투명 오버레이: 배경을 살짝 흐리게/밝게 → 가독성 확보 */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(255,255,255,0.65)', // 더 어둡게 하고 싶으면 rgba(0,0,0,0.35)
+          background: 'rgba(255,255,255,0.65)',
         }}
       />
 
-      {/* 기존 내용은 z-index로 오버레이 위에 올림 */}
-      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="card" /* 필요시 더 투명하게: style={{ background:'rgba(255,255,255,0.9)' }} */>
-          {/* Header */}
-          <header className="page-head">
-            <h2 className="page-title">나의 기록장</h2>
-            <div className="row">
-              <button className="btn-ghost" onClick={() => router.push('/social')}>우리들의 조각들</button>
+      {/* ===== 이름 설정이 필요하면, 설정 카드만 보여줌 (본문 가림) ===== */}
+      {needName ? (
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="card" style={{ maxWidth: 720, margin: '80px auto' }}>
+            <h2 className="page-title" style={{ marginBottom: 8 }}>표시 이름 설정</h2>
+            <p className="subtle" style={{ marginBottom: 16 }}>
+              커뮤니티와 저널에서 보일 이름을 먼저 정해 주세요. (2~20자)
+            </p>
+
+            <div className="row" style={{ gap: 12, alignItems: 'center' }}>
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="예: 소율, Sunray, 마음기록가"
+                className="input"
+                style={{
+                  flex: 1,
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: '1px solid var(--border)',
+                  background: '#fff',
+                  fontSize: 14,
+                }}
+              />
+              <button
+                disabled={nameSaving}
+                onClick={saveDisplayName}
+                style={{
+                  padding: '10px 18px',
+                  border: 'none',
+                  borderRadius: 9999,
+                  background: 'linear-gradient(135deg, #6DD5FA, #2980B9)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  opacity: nameSaving ? 0.7 : 1
+                }}
+              >
+                {nameSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+
+            {nameError && (
+              <p style={{ color: '#d33', marginTop: 10, fontSize: 13 }}>{nameError}</p>
+            )}
+
+            <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end', gap: 8 }}>
               <button
                 className="btn-ghost"
                 onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
@@ -129,113 +230,130 @@ export default function DashboardPage() {
                 이만 나가보기
               </button>
             </div>
-          </header>
-
-          {username && (
-            <p className="subtle">나는 <strong>{username}</strong></p>
-          )}
-
-          {/* New entry area */}
-          <div style={{ marginTop: 8 }}>
-            <textarea
-              rows={6}
-              placeholder="오늘도 화이팅. 당신의 속마음을 풀어보세요..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '10px',
-                border: '1px solid var(--border)',
-                background: '#fff',
-                fontSize: '14px',
-                lineHeight: 1.4,
-                resize: 'vertical',
-                fontFamily: 'inherit',
-              }}
-            />
-
-            <div className="row" style={{ marginTop: 10, alignItems: 'center' }}>
-              <label className="subtle" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={publish}
-                  onChange={(e) => setPublish(e.target.checked)}
-                />
-                우리들의 조각 페이지에 올려보기
-              </label>
-
-              <div style={{ flex: 1 }} />
-
-              {/* Save 버튼 그대로 (원하는 경우 gradient 로 바꿔도 됨) */}
-              <button
-                onClick={createEntry}
-                style={{
-                  backgroundColor: '#6ba292',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: 9999,
-                  padding: '10px 20px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: 'none',
-                  transition: 'transform .05s ease, filter .15s ease, box-shadow .15s ease',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.filter = 'brightness(0.98)'
-                  e.currentTarget.style.boxShadow = '0 14px 30px rgba(17,24,39,0.10)'
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.filter = 'none'
-                  e.currentTarget.style.boxShadow = '0 10px 24px rgba(17,24,39,0.08)'
-                }}
-                onMouseDown={(e) => (e.currentTarget.style.transform = 'translateY(1px)')}
-                onMouseUp={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-
-          {/* Grouped entries by date */}
-          <div style={{ marginTop: 24 }}>
-            {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
-            {sortedDays.map((dayKey) => (
-              <div key={dayKey}>
-                <div className="date-head">{formatDateHeader(dayKey)}</div>
-                <ul className="list">
-                  {grouped[dayKey].map((it, idx) => (
-                    <li key={it.id} className="item">
-                      <div className="item-head">
-                        <span className="item-time">
-                          조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-                          {it.is_public ? 'Published' : 'Private'}
-                        </span>
-                      </div>
-
-                      <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap', gap: '2px' }}>
-                        {it.content}
-                      </p>
-
-                      {/* compact buttons */}
-                      <div className="row small-btns">
-                        <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
-                        <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
-                      </div>
-
-                      {/* 공백 유지 */}
-                      <p> </p><p> </p><p> </p><p> </p><p> </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
           </div>
         </div>
-      </div>
+      ) : (
+        // ===== 이름이 있으면 기존 저널 UI 출력 =====
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="card">
+            {/* Header */}
+            <header className="page-head">
+              <h2 className="page-title">나의 기록장</h2>
+              <div className="row">
+                <button className="btn-ghost" onClick={() => router.push('/social')}>우리들의 조각들</button>
+                <button
+                  className="btn-ghost"
+                  onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
+                >
+                  이만 나가보기
+                </button>
+              </div>
+            </header>
+
+            {username && (
+              <p className="subtle">나는 <strong>{username}</strong></p>
+            )}
+
+            {/* New entry */}
+            <div style={{ marginTop: 8 }}>
+              <textarea
+                rows={6}
+                placeholder="오늘도 화이팅. 당신의 속마음을 풀어보세요..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border)',
+                  background: '#fff',
+                  fontSize: '14px',
+                  lineHeight: 1.4,
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                }}
+              />
+
+              <div className="row" style={{ marginTop: 10, alignItems: 'center' }}>
+                <label className="subtle" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={publish}
+                    onChange={(e) => setPublish(e.target.checked)}
+                  />
+                  우리들의 조각 페이지에 올려보기
+                </label>
+
+                <div style={{ flex: 1 }} />
+
+                <button
+                  onClick={createEntry}
+                  style={{
+                    backgroundColor: '#6ba292',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 9999,
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: 'none',
+                    transition: 'transform .05s ease, filter .15s ease, box-shadow .15s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.filter = 'brightness(0.98)'
+                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(17,24,39,0.10)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.filter = 'none'
+                    e.currentTarget.style.boxShadow = '0 10px 24px rgba(17,24,39,0.08)'
+                  }}
+                  onMouseDown={(e) => (e.currentTarget.style.transform = 'translateY(1px)')}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* Grouped entries by date */}
+            <div style={{ marginTop: 24 }}>
+              {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
+              {sortedDays.map((dayKey) => (
+                <div key={dayKey}>
+                  <div className="date-head">{formatDateHeader(dayKey)}</div>
+                  <ul className="list">
+                    {grouped[dayKey].map((it, idx) => (
+                      <li key={it.id} className="item">
+                        <div className="item-head">
+                          <span className="item-time">
+                            조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
+                            {it.is_public ? 'Published' : 'Private'}
+                          </span>
+                        </div>
+
+                        <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap', gap: '2px' }}>
+                          {it.content}
+                        </p>
+
+                        <div className="row small-btns">
+                          <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
+                          <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
+                        </div>
+
+                        {/* spacing */}
+                        <p> </p><p> </p><p> </p><p> </p><p> </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
