@@ -38,7 +38,7 @@ export default function CommunityFeedPage() {
 
   return (
     <main className="container">
-      <div className="card" style={{ background: '#fff', padding: 16 }}>
+      <div className="card" style={{ background: 'transparent', padding: 16 }}>
         {/* 돌아가기 버튼 (저널로) */}
         <button
           className="btn-ghost"
@@ -48,8 +48,8 @@ export default function CommunityFeedPage() {
           ← Back to My Journal
         </button>
 
-        <h2 className="page-title" style={{ marginBottom: 8 }}>Community Feed</h2>
-        <p className="subtle">Notes members chose to publish. Please be kind & respectful.</p>
+        <h2 className="page-title" style={{ marginBottom: 8 }}>우리들의 조각</h2>
+        <p className="subtle">서로의 조각을 천천히 읽어보세요. 마음에 드는 분의 프로필을 확인해보세요.</p>
 
         <div className="gallery-grid">
           {entries.map((it) => (
@@ -59,7 +59,7 @@ export default function CommunityFeedPage() {
                 className="link"
                 style={{
                   fontWeight: 700,
-                  color: '#2e7d32',
+                  color: '#7fb6a4',
                   marginBottom: 8,
                   padding: 0,
                 }}
