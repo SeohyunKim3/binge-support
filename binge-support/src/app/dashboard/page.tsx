@@ -13,6 +13,46 @@ type Entry = {
 }
 
 export default function DashboardPage() {
+
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        backgroundImage: "url('/journal-bg.png')", // public 폴더에 저장
+        backgroundSize: "cover",   // 화면에 꽉 차게
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        position: "relative",
+      }}
+    >
+      {/* 어두운 투명 레이어 */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "rgba(255,255,255,0.7)", // 밝은 분위기 투명도
+        }}
+      />
+
+      {/* 본문 컨텐츠 */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          padding: "20px",
+          maxWidth: "800px",
+          margin: "0 auto",
+          background: "rgba(255, 255, 255, 0.8)",
+          borderRadius: "12px",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h2 style={{ marginBottom: "16px" }}>My Journal</h2>
+        {/* 나머지 form, entry list 코드 */}
+      </div>
+    </main>
+  );
+
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [content, setContent] = useState('')
