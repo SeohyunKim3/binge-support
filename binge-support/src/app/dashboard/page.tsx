@@ -18,6 +18,14 @@ type Entry = {
   details_md?: string | null
 }
 
+type EntryPatch = {
+  id: string
+  content?: string
+  is_public?: boolean
+  is_resolved?: boolean
+  details_md?: string | null
+}
+
 type RowProps = {
   it: Entry;
   idx: number;
@@ -41,14 +49,10 @@ function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact 
   // 부모에서 it이 갱신되면 로컬 상태도 동기화
   useEffect(() => {
     function handleUpdated(e: Event) {
-      const detail = (e as CustomEvent).detail as {
-        id: string
-        content?: string
-        is_public?: boolean
-        details_md?: string
-      }
+      const detail = (e as CustomEvent).detail as EntryPatch
       if (!detail?.id) return
   
+      // entries 상태에서 해당 id만 부분 병합
       setEntries((prev: Entry[]) =>
         prev.map((it: Entry) =>
           it.id === detail.id ? { ...it, ...detail } : it
@@ -57,8 +61,9 @@ function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact 
     }
   
     window.addEventListener('entry-updated', handleUpdated as EventListener)
-    return () =>
+    return () => {
       window.removeEventListener('entry-updated', handleUpdated as EventListener)
+    }
   }, [])
 
   // 디테일 저장
@@ -228,6 +233,8 @@ export default function DashboardPage() {
 
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false)
 
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   
 
   useEffect(() => {
@@ -323,7 +330,17 @@ export default function DashboardPage() {
     const { error } = await supabase.from('entries').update({ details_md: md }).eq('id', entryId)
     if (error) { alert(error.message); return }
     setEntries((prev) => prev.map((e) => (e.id === entryId ? { ...e, details_md: md } : e)))
+
+    window.dispatchEvent(
+      new CustomEvent('entry-updated', {
+        detail: { id: entryId, details_md: md } as EntryPatch,
+      })
+    )
+  
+    setExpandedId(null)
   }
+
+  
 
   async function createEntry() {
     const text = content.trim()
