@@ -52,7 +52,7 @@ export default function EntryEditorPage() {
           </div>
         </div>
 
-        {createdAt && <div className="paper-meta">Created: {new Date(createdAt).toLocaleString()}</div>}
+        {createdAt && <div className="paper-meta">만든일: {new Date(createdAt).toLocaleString()}</div>}
         {err && <div className="paper-meta" style={{ color: 'var(--danger)' }}>{err}</div>}
 
         <textarea
