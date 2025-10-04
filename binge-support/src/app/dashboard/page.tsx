@@ -271,14 +271,9 @@ const unresolvedSorted = useMemo(() => {
       }}
       title="미해결만 보기 토글"
     >
-      {showUnresolvedOnly ? '미해결만 보기' : '해결만 보기'}
+      {showUnresolvedOnly ? '전체 보기' : '빨리해 급해!'}
     </button>
-                <button
-                  className="btn-ghost"
-                  onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
-                >
-                  이만 나가보기
-                </button>
+
               </div>
             </header>
 
@@ -387,7 +382,7 @@ const unresolvedSorted = useMemo(() => {
               className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
               style={{ marginLeft: 6 }}
             >
-              {it.is_resolved ? '-' : '*'}
+              {it.is_resolved ? '완료' : '급해!'}
             </span>
           </div>
         </li>
@@ -429,7 +424,7 @@ const unresolvedSorted = useMemo(() => {
                   className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
                   style={{ marginLeft: 6 }}
                 >
-                  {it.is_resolved ? '해결됨' : '미해결'}
+                  {it.is_resolved ? '해결됨' : '급해!'}
                 </span>
               </div>
             </li>
@@ -442,10 +437,9 @@ const unresolvedSorted = useMemo(() => {
 </div>
           </div>
         </div>
+        
       )}
-    </main>
-  )
-  {/* 페이지 맨 아래 로그아웃 버튼 */}
+        {/* 페이지 맨 아래 로그아웃 버튼 */}
 <div style={{ marginTop: 40, textAlign: 'center' }}>
   <button
     className="btn-ghost"
@@ -472,4 +466,8 @@ const unresolvedSorted = useMemo(() => {
     이만 나가보기
   </button>
 </div>
+    </main>
+    
+  )
+
 }
