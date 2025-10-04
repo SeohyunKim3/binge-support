@@ -260,7 +260,7 @@ const unresolvedSorted = useMemo(() => {
             <header className="page-head">
               <h2 className="page-title">나의 기록장</h2>
               <div className="row">
-                <button className="btn-ghost" onClick={() => router.push('/social')}>우리들의 조각들</button>
+                <button className="btn-ghost2" onClick={() => router.push('/social')}>🪄우리들의 조각들</button>
                 <button
       className="btn-ghost"
       onClick={() => setShowUnresolvedOnly(v => !v)}

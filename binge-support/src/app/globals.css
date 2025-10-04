@@ -102,6 +102,11 @@ button {
   color: var(--ink);
   border: 1px solid var(--border);
 }
+.btn-ghost2 {
+  background: transparent;
+  color: var(--ink);
+  border: 'none';
+}
 .btn-danger {
   background: var(--danger);
   color: #fff;
