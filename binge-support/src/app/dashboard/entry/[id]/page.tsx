@@ -2,143 +2,131 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { supabase } from '../../../../lib/supabaseClient' // <-- if needed, change to the correct relative path
-
-type Entry = {
-  id: string
-  user_id: string
-  content: string
-  created_at: string
-  is_public: boolean
-}
+import { supabase } from '../../../../lib/supabaseClient'
 
 export default function EntryEditorPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
   const [content, setContent] = useState('')
   const [isPublic, setIsPublic] = useState(false)
   const [createdAt, setCreatedAt] = useState<string | null>(null)
-  const [ownerEmail, setOwnerEmail] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    let mounted = true
-
     const load = async () => {
-      setErr(null)
-
-      // must be signed in
-      const { data: { user }, error: userErr } = await supabase.auth.getUser()
-      if (userErr) { setErr(userErr.message); setLoading(false); return }
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/'); return }
 
-      // load entry
       const { data, error } = await supabase
         .from('entries')
-        .select('id, user_id, content, created_at, is_public')
+        .select('*')
         .eq('id', id)
         .single()
 
       if (error) { setErr(error.message); setLoading(false); return }
-      if (!data) { setErr('Entry not found'); setLoading(false); return }
 
-      // (RLS already protects this, but we double-check)
       if (data.user_id !== user.id) {
         setErr('You do not have access to this entry')
         setLoading(false)
         return
       }
 
-      if (!mounted) return
       setContent(data.content ?? '')
       setIsPublic(!!data.is_public)
       setCreatedAt(data.created_at)
-      setOwnerEmail(user.email ?? null)
       setLoading(false)
     }
 
     load()
-    return () => { mounted = false }
   }, [id, router])
 
   async function save() {
     setSaving(true)
-    setErr(null)
-
     const { error } = await supabase
       .from('entries')
       .update({ content: content.trim(), is_public: isPublic })
       .eq('id', id)
-
     setSaving(false)
-    if (error) { setErr(error.message); return }
-    // optional toast/indicator
+    if (error) alert(error.message)
   }
 
-  async function remove() {
-    if (!confirm('Delete this entry? This cannot be undone.')) return
-    setDeleting(true)
-    const { error } = await supabase.from('entries').delete().eq('id', id)
-    setDeleting(false)
-    if (error) { setErr(error.message); return }
-    router.replace('/dashboard')
-  }
-
-  if (loading) {
-    return (
-      <main className="entry-shell">
-        <div className="entry-bar"><span>Loading…</span></div>
-      </main>
-    )
-  }
+  if (loading) return <main style={{ padding: 60 }}>Loading…</main>
 
   return (
-    <main className="entry-shell">
-      <div className="entry-bar">
-        <div className="left">
-          <button className="btn" onClick={() => router.push('/dashboard')}>← Back to my journal</button>
+    <main
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#fffef8',
+        backgroundImage: `
+          repeating-linear-gradient(
+            to bottom,
+            #fffef8 0px,
+            #fffef8 22px,
+            #dce0e5 23px
+          )
+        `,
+        fontFamily: '"Noto Serif KR", serif',
+        padding: '40px 20px 60px',
+      }}
+    >
+      <div style={{
+        maxWidth: 800,
+        margin: '0 auto',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20,
+        }}>
+          <button onClick={() => router.push('/dashboard')}>← Back</button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
-        <div className="right">
-          <button className="btn" onClick={save} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button className="btn danger" onClick={remove} disabled={deleting}>
-            {deleting ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
-      </div>
 
-      <header className="entry-header">
-        <h1>Journal Entry</h1>
-        <div className="meta">
-          {ownerEmail && <span>User: {ownerEmail}</span>}
-          {createdAt && <span>Created: {new Date(createdAt).toLocaleString()}</span>}
-        </div>
-      </header>
+        {createdAt && (
+          <small style={{ color: '#555' }}>
+            Created: {new Date(createdAt).toLocaleString()}
+          </small>
+        )}
 
-      {err && <div className="entry-error">{err}</div>}
+        {err && (
+          <p style={{ color: '#a00', background: '#fee', padding: 8, borderRadius: 6 }}>
+            {err}
+          </p>
+        )}
 
-      <section className="entry-editor">
         <textarea
-          className="editor-area"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Write freely…"
+          style={{
+            width: '100%',
+            minHeight: 520,
+            border: 'none',
+            background: 'transparent',
+            resize: 'none',
+            lineHeight: '1.6',
+            fontSize: '16px',
+            outline: 'none',
+            padding: '12px 8px',
+          }}
+          placeholder="Write freely..."
         />
-        <label className="publish-row">
+
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
           <input
             type="checkbox"
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
           />
-          Publish this note to the community feed
+          Publish this note to community feed
         </label>
-      </section>
+      </div>
     </main>
   )
 }
