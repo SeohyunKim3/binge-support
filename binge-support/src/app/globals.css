@@ -329,3 +329,31 @@ content {
   font-family: "Noto Sans KR", sans-serif;  /* 한국어 보기 좋은 폰트 */
   padding: 4px 4px;       /* 안쪽 여백 */
 }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid;
+  cursor: pointer;
+  user-select: none;
+  transition: all .15s ease;
+}
+
+.tag:hover { filter: brightness(0.97); transform: translateY(-1px); }
+
+.tag--ok {
+  background: #e8f7ec;     /* 연한 초록 */
+  color: #2e7d32;          /* 진한 초록 글씨 */
+  border-color: #b6e2c0;
+}
+
+.tag--todo {
+  background: #ffecec;     /* 연한 빨강 */
+  color: #c62828;          /* 진한 빨강 글씨 */
+  border-color: #ffb3b3;
+}
