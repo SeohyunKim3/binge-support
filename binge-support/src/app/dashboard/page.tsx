@@ -134,30 +134,27 @@ export default function DashboardPage() {
               <div key={dayKey}>
                 <div className="date-head">{formatDateHeader(dayKey)}</div>
                 <ul className="list">
-                  {grouped[dayKey].map((it, idx) => (
-                    <li key={it.id} className="item">
-                      <div className="item-head">
-                        <span className="item-time">
-                          ENTRY {idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-                          {it.is_public ? 'Published' : 'Private'}
-                        </span>
-                      </div>
-                      <p style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
-                      <div className="row" style={{ flexWrap: 'wrap' }}>
-                        <button className="btn-ghost" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
-                        <button className="btn-ghost" onClick={() => removeEntry(it.id)}>Delete</button>
-                        <button
-                          className="btn-ghost"
-                          onClick={() => togglePublic(it.id, !(it.is_public ?? false))}
-                        >
-                          {it.is_public ? 'Unpublish' : 'Publish'}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+  {grouped[dayKey].map((it, idx) => (
+    <li key={it.id} className="item">
+      <div className="item-head">
+        <span className="item-time">
+          ENTRY {idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+        <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
+          {it.is_public ? 'Published' : 'Private'}
+        </span>
+      </div>
+      <p style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
+      <div className="row small-btns">
+        <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
+        <button className="btn-mini" onClick={() => removeEntry(it.id)}>Delete</button>
+        <button className="btn-mini" onClick={() => togglePublic(it.id, !(it.is_public ?? false))}>
+          {it.is_public ? 'Unpublish' : 'Publish'}
+        </button>
+      </div>
+    </li>
+  ))}
+</ul>
               </div>
             ))}
           </div>

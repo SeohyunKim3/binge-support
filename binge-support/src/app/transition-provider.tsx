@@ -14,14 +14,16 @@ export default function TransitionProvider({
     <AnimatePresence mode="wait">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 2 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
         transition={{
           duration: 0.2,
           ease: [0.33, 1, 0.68, 1],
         }}
         style={{
           minHeight: '100vh',
+          opacity: 1,
         }}
       >
         {children}
