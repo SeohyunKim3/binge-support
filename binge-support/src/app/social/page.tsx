@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { supabase } from '../../lib/supabaseClient'
 
 type Entry = {
   id: string
@@ -11,13 +11,13 @@ type Entry = {
   profiles?: { username?: string | null } | null
 }
 
-export default function SocialPage() {
+export default function CommunityFeedPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       const { data, error } = await supabase
         .from('entries')
         .select(`
@@ -28,7 +28,10 @@ export default function SocialPage() {
         `)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
-      if (!error) setEntries(data as Entry[])
+
+      if (!error && data) {
+        setEntries(data as Entry[])
+      }
       setLoading(false)
     })()
   }, [])
@@ -37,20 +40,31 @@ export default function SocialPage() {
 
   return (
     <main className="container">
-      <div className="card" style={{ background: 'transparent', boxShadow: 'none' }}>
-        <h2 className="page-title" style={{ marginBottom: 8 }}>Community Feed</h2>
-        <p className="subtle">Explore reflections shared by others</p>
+      <div className="card" style={{ background: '#fff', padding: '16px' }}>
+        
+        {/* Back button */}
+        <button
+          className="btn-ghost"
+          style={{ marginBottom: '16px' }}
+          onClick={() => router.push('/dashboard')}
+        >
+          ← Back to My Journal
+        </button>
+
+        <h2 className="page-title" style={{ marginBottom: 8 }}>
+          Community Feed
+        </h2>
+        <p className="subtle">Notes members chose to publish. Please be kind & respectful.</p>
 
         <div className="gallery-grid">
           {entries.map((it) => (
             <div key={it.id} className="gallery-card">
               <button
-                className="gallery-user link"
-                onClick={() =>
-                  router.push(`/user/${encodeURIComponent(it.profiles?.username ?? 'anonymous')}`)
-                }
+                className="username-link"
+                onClick={() => router.push(`/user/${it.profiles?.username}`)}
+                style={{ fontWeight: 'bold', marginBottom: '4px' }}
               >
-                @{it.profiles?.username ?? 'anonymous'}
+                @{it.profiles?.username || 'Anonymous'}
               </button>
               <p className="gallery-text">{it.content}</p>
               <div className="gallery-date">
@@ -61,7 +75,7 @@ export default function SocialPage() {
               </div>
             </div>
           ))}
-          {entries.length === 0 && <p className="subtle">No public posts yet.</p>}
+          {entries.length === 0 && <p className="subtle">No community posts yet.</p>}
         </div>
       </div>
     </main>
