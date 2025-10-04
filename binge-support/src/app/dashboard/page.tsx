@@ -200,7 +200,7 @@ export default function DashboardPage() {
                       {/* compact buttons */}
                       <div className="row small-btns">
                         <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
-                        <button className="btn-mini" onClick={() => removeEntry(it.id)}>삭제</button>
+                        <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
                       </div>
                       <p>  </p>
                       <p>  </p>
