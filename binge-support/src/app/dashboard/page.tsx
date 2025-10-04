@@ -13,46 +13,6 @@ type Entry = {
 }
 
 export default function DashboardPage() {
-
-  return (
-    <main
-      style={{
-        minHeight: "100vh",
-        backgroundImage: "url('/journal-bg.png')", // public 폴더에 저장
-        backgroundSize: "cover",   // 화면에 꽉 차게
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        position: "relative",
-      }}
-    >
-      {/* 어두운 투명 레이어 */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "rgba(255,255,255,0.7)", // 밝은 분위기 투명도
-        }}
-      />
-
-      {/* 본문 컨텐츠 */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "20px",
-          maxWidth: "800px",
-          margin: "0 auto",
-          background: "rgba(255, 255, 255, 0.8)",
-          borderRadius: "12px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h2 style={{ marginBottom: "16px" }}>My Journal</h2>
-        {/* 나머지 form, entry list 코드 */}
-      </div>
-    </main>
-  );
-
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [content, setContent] = useState('')
@@ -133,9 +93,30 @@ export default function DashboardPage() {
   if (loading) return null
 
   return (
-    <main>
-      <div className="container">
-        <div className="card">
+    // ✅ 배경 이미지 + 투명 오버레이 적용 (나머지 디자인/구조는 그대로)
+    <main
+      style={{
+        minHeight: '100vh',
+        position: 'relative',
+        backgroundImage: "url('/journal-bg.png')", // public/journal-bg.png 로 저장
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* 투명 오버레이: 배경을 살짝 흐리게/밝게 → 가독성 확보 */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(255,255,255,0.65)', // 더 어둡게 하고 싶으면 rgba(0,0,0,0.35)
+        }}
+      />
+
+      {/* 기존 내용은 z-index로 오버레이 위에 올림 */}
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+        <div className="card" /* 필요시 더 투명하게: style={{ background:'rgba(255,255,255,0.9)' }} */>
           {/* Header */}
           <header className="page-head">
             <h2 className="page-title">나의 기록장</h2>
@@ -154,7 +135,7 @@ export default function DashboardPage() {
             <p className="subtle">나는 <strong>{username}</strong></p>
           )}
 
-          {/* New entry area (smaller font + tighter line-height + prettier button) */}
+          {/* New entry area */}
           <div style={{ marginTop: 8 }}>
             <textarea
               rows={6}
@@ -167,8 +148,8 @@ export default function DashboardPage() {
                 borderRadius: '10px',
                 border: '1px solid var(--border)',
                 background: '#fff',
-                fontSize: '14px',      // smaller font
-                lineHeight: 1.4,        // tighter spacing
+                fontSize: '14px',
+                lineHeight: 1.4,
                 resize: 'vertical',
                 fontFamily: 'inherit',
               }}
@@ -186,14 +167,14 @@ export default function DashboardPage() {
 
               <div style={{ flex: 1 }} />
 
-              {/* Prettier Save button */}
+              {/* Save 버튼 그대로 (원하는 경우 gradient 로 바꿔도 됨) */}
               <button
                 onClick={createEntry}
                 style={{
                   backgroundColor: '#6ba292',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: 9999,           // pill
+                  borderRadius: 9999,
                   padding: '10px 20px',
                   fontSize: '14px',
                   fontWeight: 700,
@@ -234,21 +215,19 @@ export default function DashboardPage() {
                           {it.is_public ? 'Published' : 'Private'}
                         </span>
                       </div>
-                      <p>  </p>
-                      <p>  </p>
-                      <p>  </p>
-                      <p className="entry-text" style={{ margin: '8px 0px 10px', whiteSpace: 'pre-wrap', gap: '2px'}}>{it.content}</p>
-                      <p>  </p>
+
+                      <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap', gap: '2px' }}>
+                        {it.content}
+                      </p>
+
                       {/* compact buttons */}
                       <div className="row small-btns">
                         <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
                         <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
                       </div>
-                      <p>  </p>
-                      <p>  </p>
-                      <p>  </p>
-                      <p>  </p>
-                      <p>  </p>
+
+                      {/* 공백 유지 */}
+                      <p> </p><p> </p><p> </p><p> </p><p> </p>
                     </li>
                   ))}
                 </ul>
