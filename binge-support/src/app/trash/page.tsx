@@ -44,7 +44,7 @@ export default function TrashPage() {
     if (!error) setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p>로딩...</p>
 
   return (
     <main style={{ padding: '40px 20px', maxWidth: 700, margin: '0 auto' }}>
@@ -65,8 +65,8 @@ export default function TrashPage() {
                 <button
                   onClick={() => restoreEntry(it.id)}
                   style={{
-                    background: '#a5d6a7',
-                    color: '#fff',
+                    background: 'none',
+                    color: 'black',
                     border: 'none',
                     borderRadius: 8,
                     padding: '6px 12px',
@@ -79,8 +79,8 @@ export default function TrashPage() {
                 <button
                   onClick={() => permanentlyDelete(it.id)}
                   style={{
-                    background: '#ef9a9a',
-                    color: '#fff',
+                    background: 'none',
+                    color: 'red',
                     border: 'none',
                     borderRadius: 8,
                     padding: '6px 12px',

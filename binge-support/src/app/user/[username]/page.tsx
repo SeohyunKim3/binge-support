@@ -57,7 +57,7 @@ export default function UserJournalPage() {
         </button>
 
         <h2 className="page-title" style={{ marginBottom: 8 }}>
-          @{decodeURIComponent(username)}’s Journal
+          @{decodeURIComponent(username)}’s 기록장
         </h2>
         <p className="subtle">기록인의 공개된 모든 조각들의 모음</p>
 
