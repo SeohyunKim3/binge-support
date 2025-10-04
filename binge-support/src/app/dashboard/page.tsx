@@ -265,7 +265,7 @@ const unresolvedSorted = useMemo(() => {
       className="btn-ghost"
       onClick={() => setShowUnresolvedOnly(v => !v)}
       style={{
-        borderColor: showUnresolvedOnly ? '#2e7d32' : undefined,
+        borderColor: showUnresolvedOnly ? 'none' : undefined,
         color: showUnresolvedOnly ? '#2e7d32' : undefined,
         fontWeight: showUnresolvedOnly ? 700 : 500
       }}
@@ -370,8 +370,8 @@ const unresolvedSorted = useMemo(() => {
           </p>
 
           <div className="row small-btns">
-            <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
-            <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
+            <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>✍🏻</button>
+            <button className="btn-mini2" onClick={() => removeEntry(it.id)}>🗑️</button>
             {/* 해결/미해결 토글 라벨은 삭제 옆에만 (클릭해서 토글) */}
             <span
               role="button"
