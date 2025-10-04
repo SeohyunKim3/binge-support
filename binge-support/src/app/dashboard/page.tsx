@@ -116,6 +116,16 @@ export default function DashboardPage() {
     setNeedName(false)
   }
 
+  // ✅ 필터 토글 상태
+const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false)
+
+// ✅ 미해결만(최신 우선) 평면 리스트
+const unresolvedSorted = useMemo(() => {
+  return entries
+    .filter((e) => !e.is_resolved)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+}, [entries])
+
   // ---------- entry actions ----------
   async function createEntry() {
     const text = content.trim()
@@ -258,6 +268,18 @@ export default function DashboardPage() {
               <div className="row">
                 <button className="btn-ghost" onClick={() => router.push('/social')}>우리들의 조각들</button>
                 <button
+      className="btn-ghost"
+      onClick={() => setShowUnresolvedOnly(v => !v)}
+      style={{
+        borderColor: showUnresolvedOnly ? '#2e7d32' : undefined,
+        color: showUnresolvedOnly ? '#2e7d32' : undefined,
+        fontWeight: showUnresolvedOnly ? 700 : 500
+      }}
+      title="미해결만 보기 토글"
+    >
+      {showUnresolvedOnly ? '미해결만 보기: 켜짐' : '미해결만 보기: 꺼짐'}
+    </button>
+                <button
                   className="btn-ghost"
                   onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
                 >
@@ -332,52 +354,98 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Grouped entries by date */}
-            <div style={{ marginTop: 24 }}>
-              {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
-              {sortedDays.map((dayKey) => (
-                <div key={dayKey}>
-                  <div className="date-head">{formatDateHeader(dayKey)}</div>
-                  <ul className="list">
-                    {grouped[dayKey].map((it, idx) => (
-                      <li key={it.id} className="item">
-                        <div className="item-head">
-                          <span className="item-time">
-                            조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-                            {it.is_public ? 'Published' : 'Private'}
-                          </span>
-                        </div>
+            {/* 목록 영역 */}
+<div style={{ marginTop: 24 }}>
 
-                        <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap', gap: '2px' }}>
-                          {it.content}
-                        </p>
+{/* ✅ 미해결만 보기일 때: 날짜 구분 없이 평면 리스트 */}
+{showUnresolvedOnly ? (
+  <>
+    {unresolvedSorted.length === 0 && (
+      <p className="subtle">미해결 조각이 없어요. 모두 해결되었네요! 🎉</p>
+    )}
+    <ul className="list">
+      {unresolvedSorted.map((it, idx) => (
+        <li key={it.id} className="item">
+          <div className="item-head">
+            <span className="item-time">
+              조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            {/* 공개여부만 유지 (해결/미해결 라벨은 아래 액션 줄에만 둠) */}
+            <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
+              {it.is_public ? 'Published' : 'Private'}
+            </span>
+          </div>
 
-                        <div className="row small-btns">
-                          <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
-                          <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
-                          <span
-    role="button"
-    tabIndex={0}
-    title="클릭해서 상태 바꾸기"
-    onClick={() => toggleResolved(it.id, !it.is_resolved)}
-    onKeyDown={(e) => { if (e.key === 'Enter') toggleResolved(it.id, !it.is_resolved) }}
-    className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
-    style={{ marginLeft: 6 }}
-  >
-    {it.is_resolved ? '해결됨' : '미해결'}
-  </span>
-                        </div>
+          <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>
+            {it.content}
+          </p>
 
-                        {/* spacing */}
-                        <p> </p><p> </p><p> </p><p> </p><p> </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+          <div className="row small-btns">
+            <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
+            <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
+            {/* 해결/미해결 토글 라벨은 삭제 옆에만 (클릭해서 토글) */}
+            <span
+              role="button"
+              tabIndex={0}
+              title="클릭해서 상태 바꾸기"
+              onClick={() => toggleResolved(it.id, !it.is_resolved)}
+              onKeyDown={(e) => { if (e.key === 'Enter') toggleResolved(it.id, !it.is_resolved) }}
+              className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
+              style={{ marginLeft: 6 }}
+            >
+              {it.is_resolved ? '해결됨' : '미해결'}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </>
+) : (
+  /* ✅ 기본: 날짜 그룹 렌더링 (기존과 동일) */
+  <>
+    {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
+    {sortedDays.map((dayKey) => (
+      <div key={dayKey}>
+        <div className="date-head">{formatDateHeader(dayKey)}</div>
+        <ul className="list">
+          {grouped[dayKey].map((it, idx) => (
+            <li key={it.id} className="item">
+              <div className="item-head">
+                <span className="item-time">
+                  조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
+                  {it.is_public ? 'Published' : 'Private'}
+                </span>
+              </div>
+
+              <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>
+                {it.content}
+              </p>
+
+              <div className="row small-btns">
+                <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
+                <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  title="클릭해서 상태 바꾸기"
+                  onClick={() => toggleResolved(it.id, !it.is_resolved)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') toggleResolved(it.id, !it.is_resolved) }}
+                  className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
+                  style={{ marginLeft: 6 }}
+                >
+                  {it.is_resolved ? '해결됨' : '미해결'}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </>
+)}
+</div>
           </div>
         </div>
       )}
