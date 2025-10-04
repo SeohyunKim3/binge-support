@@ -317,3 +317,8 @@ button {
 h2 {
   color: #7fb6a4;
 }
+
+content {
+  font-size: 15px;
+  color: grey;
+}
