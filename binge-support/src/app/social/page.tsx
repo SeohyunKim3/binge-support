@@ -45,7 +45,7 @@ export default function CommunityFeedPage() {
           style={{ marginBottom: 12 }}
           onClick={() => router.push('/dashboard')}
         >
-          ← Back to My Journal
+          ← 기록으로 돌아가기
         </button>
 
         <h2 className="page-title" style={{ marginBottom: 8 }}>우리들의 조각</h2>
@@ -81,7 +81,7 @@ export default function CommunityFeedPage() {
             </div>
           ))}
 
-          {entries.length === 0 && <p className="subtle">No community posts yet.</p>}
+          {entries.length === 0 && <p className="subtle">아직 다른 분들의 조각이 없어요!.</p>}
         </div>
       </div>
     </main>

@@ -98,27 +98,27 @@ export default function DashboardPage() {
         <div className="card">
           {/* Header */}
           <header className="page-head">
-            <h2 className="page-title">My Journal</h2>
+            <h2 className="page-title">나의 기록장</h2>
             <div className="row">
-              <button className="btn-ghost" onClick={() => router.push('/social')}>Community feed</button>
+              <button className="btn-ghost" onClick={() => router.push('/social')}>우리들의 조각들</button>
               <button
                 className="btn-ghost"
                 onClick={async () => { await supabase.auth.signOut(); router.replace('/') }}
               >
-                Sign out
+                이만 나가보기
               </button>
             </div>
           </header>
 
           {username && (
-            <p className="subtle">Signed in as <strong>{username}</strong></p>
+            <p className="subtle">나는 <strong>{username}</strong></p>
           )}
 
           {/* New entry area (smaller font + tighter line-height + prettier button) */}
           <div style={{ marginTop: 8 }}>
             <textarea
               rows={6}
-              placeholder="Write about your thoughts or feelings..."
+              placeholder="오늘도 화이팅. 당신의 속마음을 풀어보세요..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               style={{
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                   checked={publish}
                   onChange={(e) => setPublish(e.target.checked)}
                 />
-                Publish this note to the community feed
+                우리들의 조각 페이지에 올려보기
               </label>
 
               <div style={{ flex: 1 }} />
@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
           {/* Grouped entries by date */}
           <div style={{ marginTop: 24 }}>
-            {sortedDays.length === 0 && <p className="subtle">No entries yet.</p>}
+            {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
             {sortedDays.map((dayKey) => (
               <div key={dayKey}>
                 <div className="date-head">{formatDateHeader(dayKey)}</div>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                     <li key={it.id} className="item">
                       <div className="item-head">
                         <span className="item-time">
-                          ENTRY {idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
                           {it.is_public ? 'Published' : 'Private'}
@@ -199,8 +199,8 @@ export default function DashboardPage() {
 
                       {/* compact buttons */}
                       <div className="row small-btns">
-                        <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
-                        <button className="btn-mini" onClick={() => removeEntry(it.id)}>Delete</button>
+                        <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
+                        <button className="btn-mini" onClick={() => removeEntry(it.id)}>삭제</button>
                         <button
                           className="btn-mini"
                           onClick={() => togglePublic(it.id, !(it.is_public ?? false))}
