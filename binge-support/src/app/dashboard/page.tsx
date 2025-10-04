@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient' // ← adjust if needed
 
@@ -9,22 +9,26 @@ type Entry = {
   user_id: string
   content: string
   created_at: string
+  is_public?: boolean
 }
 
 export default function Dashboard() {
   const router = useRouter()
+
+  // auth & loading
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // new entry
+  // create form
   const [content, setContent] = useState('')
+  const [publish, setPublish] = useState(false)
 
-  // list + editing
+  // list & edit state
   const [entries, setEntries] = useState<Entry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
 
-  // auth gate + initial load
+  // gate + initial load
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const uid = data.session?.user?.id ?? null
@@ -36,6 +40,7 @@ export default function Dashboard() {
       await load(uid)
       setLoading(false)
     })
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       const uid = session?.user?.id ?? null
       if (!uid) router.replace('/')
@@ -46,55 +51,42 @@ export default function Dashboard() {
   async function load(uid: string) {
     const { data, error } = await supabase
       .from('entries')
-      .select('*')
+      .select()
       .eq('user_id', uid)
       .order('created_at', { ascending: false })
       .limit(200)
+
     if (!error && data) setEntries(data as Entry[])
   }
 
   // CREATE
-  async function createEntry(e: React.FormEvent) {
+  async function createEntry(e: FormEvent) {
     e.preventDefault()
     if (!userId || !content.trim()) return
-    const text = content.trim()
+    const textVal = content.trim()
     setContent('')
 
     // optimistic add
     const temp: Entry = {
       id: 'temp-' + Date.now(),
       user_id: userId,
-      content: text,
+      content: textVal,
       created_at: new Date().toISOString(),
+      is_public: publish,
     }
     setEntries((prev) => [temp, ...prev])
 
     const { data, error } = await supabase
       .from('entries')
-      .insert({ user_id: userId, content: text })
+      .insert({ user_id: userId, content: textVal, is_public: publish })
       .select()
       .single()
 
     if (error) {
       alert(error.message)
-      // revert optimistic
       setEntries((prev) => prev.filter((e) => e.id !== temp.id))
     } else if (data) {
-      // swap temp with real
       setEntries((prev) => [data as Entry, ...prev.filter((e) => e.id !== temp.id)])
-    }
-  }
-
-  // DELETE
-  async function removeEntry(id: string) {
-    if (!confirm('Delete this entry?')) return
-    const keep = entries.filter((e) => e.id !== id)
-    setEntries(keep) // optimistic
-    const { error } = await supabase.from('entries').delete().eq('id', id)
-    if (error) {
-      alert(error.message)
-      // restore
-      await load(userId!)
     }
   }
 
@@ -108,16 +100,38 @@ export default function Dashboard() {
     setEditingText('')
   }
   async function saveEdit(id: string) {
-    const text = editingText.trim()
-    if (!text) return
-    // optimistic update
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, content: text } as Entry : e)))
+    const textVal = editingText.trim()
+    if (!textVal) return
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, content: textVal } : e)))
     setEditingId(null)
     setEditingText('')
-    const { error } = await supabase.from('entries').update({ content: text }).eq('id', id)
+    const { error } = await supabase.from('entries').update({ content: textVal }).eq('id', id)
     if (error) {
       alert(error.message)
-      await load(userId!)
+      if (userId) await load(userId)
+    }
+  }
+
+  // PUBLISH TOGGLE
+  async function togglePublic(id: string, value: boolean) {
+    const before = entries
+    setEntries(before.map((e) => (e.id === id ? { ...e, is_public: value } : e)))
+    const { error } = await supabase.from('entries').update({ is_public: value }).eq('id', id)
+    if (error) {
+      alert(error.message)
+      setEntries(before)
+    }
+  }
+
+  // DELETE
+  async function removeEntry(id: string) {
+    if (!confirm('Delete this entry?')) return
+    const keep = entries.filter((e) => e.id !== id)
+    setEntries(keep)
+    const { error } = await supabase.from('entries').delete().eq('id', id)
+    if (error) {
+      alert(error.message)
+      if (userId) await load(userId)
     }
   }
 
@@ -134,7 +148,10 @@ export default function Dashboard() {
     <main style={{ maxWidth: 720, margin: '40px auto', fontFamily: 'system-ui' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>My journal</h2>
-        <button onClick={signOut}>Sign out</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => router.push('/social')}>Community feed</button>
+          <button onClick={signOut}>Sign out</button>
+        </div>
       </header>
 
       {/* create */}
@@ -146,6 +163,14 @@ export default function Dashboard() {
           onChange={(e) => setContent(e.target.value)}
           style={{ padding: 8 }}
         />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={publish}
+            onChange={(e) => setPublish(e.target.checked)}
+          />
+          Publish this note to the community feed (others can read it)
+        </label>
         <button disabled={!content.trim()}>Save</button>
       </form>
 
@@ -173,9 +198,12 @@ export default function Dashboard() {
               ) : (
                 <>
                   <p style={{ margin: '6px 0 8px' }}>{it.content}</p>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button type="button" onClick={() => startEdit(it)}>Edit</button>
                     <button type="button" onClick={() => removeEntry(it.id)}>Delete</button>
+                    <button type="button" onClick={() => togglePublic(it.id, !(it.is_public ?? false))}>
+                      {it.is_public ? 'Unpublish' : 'Publish'}
+                    </button>
                   </div>
                 </>
               )}
