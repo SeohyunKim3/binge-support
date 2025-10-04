@@ -16,18 +16,6 @@ type Entry = {
 }
 
 export default function DashboardPage() {
-
-      <div className="container">
-        <div className="card">
-          {/* 마인드풀 타이머 */}
-          <MindfulTimer />
-
-          {/* 기존 나의 기록장 코드들 */}
-          <h2 className="page-title">나의 기록장</h2>
-          ...
-        </div>
-      </div>
-
   const router = useRouter()
 
   const [username, setUsername] = useState('')
@@ -72,42 +60,60 @@ function MindfulTimer() {
   if (!active) return null;
 
   return (
-    <div style={{ textAlign: "center", marginBottom: "16px" }}>
+    <div style={{ textAlign: "center", marginBottom: "16px", position: "relative" }}>
       {timeLeft > 0 ? (
         <>
           <div
             style={{
-              width: "100px",
-              height: "100px",
+              width: "110px",
+              height: "110px",
               borderRadius: "50%",
-              border: "4px dashed #a3c9a8",
+              border: "3px solid #b7d8b7",
+              background: "linear-gradient(135deg, #ecf8ec, #f6fff6)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto",
-              fontSize: "22px",
-              fontWeight: "bold",
-              background: "#f9fff9",
-              color: "#4a7856",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+              fontSize: "20px",
+              fontWeight: "600",
+              color: "#4d7253",
+              boxShadow: "inset 0 2px 6px rgba(0,0,0,0.05), 0 4px 10px rgba(0,0,0,0.05)",
+              animation: "float 2s ease-in-out infinite",
               transition: "all 0.3s ease",
             }}
           >
-            🌱 {timeLeft}s
+            🌿 {timeLeft}s
           </div>
-          <p style={{ marginTop: "8px", fontSize: "14px", color: "#6b7c6b" }}>
-            잠시 숨 고르기… 🧘
+          <style>
+            {`
+              @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-4px); }
+                100% { transform: translateY(0px); }
+              }
+            `}
+          </style>
+  
+          <p style={{ marginTop: "10px", fontSize: "14px", color: "#678a68" }}>
+            오늘의 마음을 준비하는 중이에요 🫖
           </p>
+  
           <button
             style={{
-              marginTop: "6px",
-              background: "none",
-              border: "1px solid #bbb",
-              borderRadius: "6px",
-              padding: "4px 10px",
+              marginTop: "8px",
+              background: "linear-gradient(135deg, #a3cfa8, #85b995)",
+              border: "none",
+              borderRadius: "9999px",
+              padding: "6px 14px",
               fontSize: "13px",
+              color: "white",
               cursor: "pointer",
+              transition: "transform 0.1s ease, opacity 0.3s ease",
             }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.96)")}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             onClick={() => {
               setActive(false);
               localStorage.setItem("disableTimer", "true");
@@ -117,9 +123,17 @@ function MindfulTimer() {
           </button>
         </>
       ) : (
-        <p style={{ color: "#4a7856", fontWeight: "600" }}>
-          ✨ 준비 완료! 이제 글을 시작해볼까요?
-        </p>
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "15px",
+            fontWeight: "600",
+            color: "#46664b",
+            animation: "fadeIn 0.8s ease",
+          }}
+        >
+          🌸 오늘의 준비 완료! 당신의 조각을 기록해보세요.
+        </div>
       )}
     </div>
   );
