@@ -16,6 +16,21 @@ type Entry = {
 }
 
 export default function DashboardPage() {
+  return (
+    <main>
+      <div className="container">
+        <div className="card">
+          {/* 마인드풀 타이머 */}
+          <MindfulTimer />
+
+          {/* 기존 나의 기록장 코드들 */}
+          <h2 className="page-title">나의 기록장</h2>
+          ...
+        </div>
+      </div>
+    </main>
+  );
+  
   const router = useRouter()
 
   const [username, setUsername] = useState('')
@@ -40,6 +55,80 @@ function todayLocalKey() {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
   return d.toISOString().slice(0, 10) // 'YYYY-MM-DD'
 }
+
+function MindfulTimer() {
+  const [timeLeft, setTimeLeft] = useState(30); // 30초 기본
+  const [active, setActive] = useState(true);
+
+  // localStorage 체크해서 기본값 불러오기
+  useEffect(() => {
+    const saved = localStorage.getItem("disableTimer");
+    if (saved === "true") setActive(false);
+  }, []);
+
+  useEffect(() => {
+    if (!active || timeLeft <= 0) return;
+    const t = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearInterval(t);
+  }, [active, timeLeft]);
+
+  if (!active) return null;
+
+  return (
+    <div style={{ textAlign: "center", marginBottom: "16px" }}>
+      {timeLeft > 0 ? (
+        <>
+          <div
+            style={{
+              width: "100px",
+              height: "100px",
+              borderRadius: "50%",
+              border: "4px dashed #a3c9a8",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto",
+              fontSize: "22px",
+              fontWeight: "bold",
+              background: "#f9fff9",
+              color: "#4a7856",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+              transition: "all 0.3s ease",
+            }}
+          >
+            🌱 {timeLeft}s
+          </div>
+          <p style={{ marginTop: "8px", fontSize: "14px", color: "#6b7c6b" }}>
+            잠시 숨 고르기… 🧘
+          </p>
+          <button
+            style={{
+              marginTop: "6px",
+              background: "none",
+              border: "1px solid #bbb",
+              borderRadius: "6px",
+              padding: "4px 10px",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setActive(false);
+              localStorage.setItem("disableTimer", "true");
+            }}
+          >
+            ⏸️ 타이머 끄기
+          </button>
+        </>
+      ) : (
+        <p style={{ color: "#4a7856", fontWeight: "600" }}>
+          ✨ 준비 완료! 이제 글을 시작해볼까요?
+        </p>
+      )}
+    </div>
+  );
+}
+
+
   const [nameError, setNameError] = useState<string | null>(null)
 
   useEffect(() => {
