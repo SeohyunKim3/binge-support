@@ -38,7 +38,7 @@ export default function CommunityFeedPage() {
 
   return (
     <main className="container">
-      <div className="card" style={{ background: 'transparent', padding: 16 }}>
+      <div className="card" style={{ background: 'transparent', boxShadow: 'none', padding: 16 }}>
         {/* 돌아가기 버튼 (저널로) */}
         <button
           className="btn-ghost"

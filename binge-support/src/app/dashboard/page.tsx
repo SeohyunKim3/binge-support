@@ -158,7 +158,7 @@ export default function DashboardPage() {
                   fontSize: '14px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 10px 24px rgba(17,24,39,0.08)',
+                  boxShadow: 'none',
                   transition: 'transform .05s ease, filter .15s ease, box-shadow .15s ease',
                 }}
                 onMouseOver={(e) => {
