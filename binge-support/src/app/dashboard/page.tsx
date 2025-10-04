@@ -499,7 +499,6 @@ const unresolvedSorted = useMemo(() => {
         // ===== 이름이 있으면 기존 저널 UI 출력 =====
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div className="card">
-          <MindfulTimer />
             {/* Header */}
             <header className="page-head">
               <h2 className="page-title">나의 기록장</h2>
