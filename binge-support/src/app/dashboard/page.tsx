@@ -186,7 +186,7 @@ const unresolvedSorted = useMemo(() => {
     <main
       style={{
         minHeight: '100vh',
-        position: 'absolute',
+        position: 'relative',
         backgroundImage: "url('/journal-bg.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -261,7 +261,7 @@ const unresolvedSorted = useMemo(() => {
             <header className="page-head">
               <h2 className="page-title">나의 기록장</h2>
               <div className="row">
-                <button className="btn-ghost" onClick={() => router.push('/social')}>🪄 우리들의 조각들</button>
+                <button className="btn-ghost" onClick={() => router.push('/social')}>🪄 조각 모음</button>
                 <button
       className="btn-ghost"
       onClick={() => setShowUnresolvedOnly(v => !v)}
@@ -309,7 +309,7 @@ const unresolvedSorted = useMemo(() => {
                     checked={publish}
                     onChange={(e) => setPublish(e.target.checked)}
                   />
-                  우리들의 조각 페이지에 올려보기
+                  조각 페이지에 올려보기
                 </label>
 
                 <div style={{ flex: 1 }} />

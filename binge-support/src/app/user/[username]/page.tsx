@@ -59,7 +59,7 @@ export default function UserJournalPage() {
         <h2 className="page-title" style={{ marginBottom: 8 }}>
           @{decodeURIComponent(username)}’s Journal
         </h2>
-        <p className="subtle">Reading reflections shared by this user.</p>
+        <p className="subtle">기록인의 공개된 모든 조각들의 모음</p>
 
         <div className="gallery-grid">
           {entries.map((it) => (
@@ -70,7 +70,7 @@ export default function UserJournalPage() {
               </div>
             </div>
           ))}
-          {entries.length === 0 && <p className="subtle">This user has no public posts yet.</p>}
+          {entries.length === 0 && <p className="subtle">해당 기록인은 아직 공개된 조각이 없어요!</p>}
         </div>
       </div>
     </main>

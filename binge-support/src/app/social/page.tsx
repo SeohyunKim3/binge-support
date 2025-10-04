@@ -48,7 +48,7 @@ export default function CommunityFeedPage() {
           ← 기록으로 돌아가기
         </button>
 
-        <h2 className="page-title" style={{ marginBottom: 8 }}>우리들의 조각</h2>
+        <h2 className="page-title" style={{ marginBottom: 8 }}>조각 모음</h2>
         <p className="subtle">서로의 조각을 천천히 읽어보세요. 마음에 드는 분의 프로필을 확인해보세요.</p>
 
         <div className="gallery-grid">
