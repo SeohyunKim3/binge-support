@@ -10,6 +10,7 @@ type Entry = {
   content: string
   created_at: string
   is_public: boolean
+  is_resolved: boolean
 }
 
 export default function DashboardPage() {
@@ -52,10 +53,25 @@ export default function DashboardPage() {
   async function loadEntries(userId: string) {
     const { data } = await supabase
       .from('entries')
-      .select('id, user_id, content, created_at, is_public')
+      .select('id, user_id, content, created_at, is_public, is_resolved')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     setEntries((data ?? []) as Entry[])
+  }
+
+  async function toggleResolved(id: string, makeResolved: boolean) {
+    const { error } = await supabase
+      .from('entries')
+      .update({ is_resolved: makeResolved })
+      .eq('id', id)
+  
+    if (!error) {
+      setEntries(prev =>
+        prev.map(e =>
+          e.id === id ? { ...e, is_resolved: makeResolved } : e
+        )
+      )
+    }
   }
 
   // ---------- 이름 저장 ----------
@@ -332,6 +348,16 @@ export default function DashboardPage() {
                           <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
                             {it.is_public ? 'Published' : 'Private'}
                           </span>
+                          <span
+                          className={`badge ${it.is_resolved ? 'resolved' : 'unresolved'}`}
+                          style={{
+                            marginLeft: 8,
+                            background: it.is_resolved ? '#4caf50' : '#f44336',
+                            color: '#fff',
+                          }}
+                        >
+                          {it.is_resolved ? '해결됨' : '미해결'}
+                        </span>
                         </div>
 
                         <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap', gap: '2px' }}>
@@ -341,6 +367,12 @@ export default function DashboardPage() {
                         <div className="row small-btns">
                           <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>편집</button>
                           <button className="btn-mini2" onClick={() => removeEntry(it.id)}>삭제</button>
+                          <button
+    className="btn-mini"
+    onClick={() => toggleResolved(it.id, !it.is_resolved)}
+  >
+    {it.is_resolved ? '미해결로' : '해결로'}
+  </button>
                         </div>
 
                         {/* spacing */}
