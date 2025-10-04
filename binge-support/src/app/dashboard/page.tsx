@@ -18,45 +18,46 @@ type Entry = {
   details_md?: string | null
 }
 
+type RowProps = {
+  it: Entry;
+  idx: number;
+  onRemove: (id: string) => void;
+  onToggleResolved: (id: string, make: boolean) => void;
+  onSaveDetails: (id: string, md: string) => void;
+  compact?: boolean;
+};
+
 /* ------------------------ 개별 카드 컴포넌트 ------------------------ */
-function EntryRow({
-  it,
-  idx,
-  onRemove,
-  onToggleResolved,
-  onSaveDetails,
-  compact = false,
-}: {
-  it: Entry
-  idx: number
-  compact?: boolean
-  onRemove: (id: string) => void
-  onToggleResolved: (id: string, makeResolved: boolean) => void
-  onSaveDetails: (entryId: string, md: string) => Promise<void>
-}) {
-  const router = useRouter()
+function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact = false }: RowProps) {
+  const router = useRouter();
 
-  // 각 카드 내부에서만 쓰는 로컬 상태들은 여기(컴포넌트 최상위)에서 선언합니다.
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [entry, setEntry] = useState<Entry>(it)
+  // 기존
+  // 로컬 상태(보기/편집/현재 엔트리)
+  const [entry, setEntry] = useState<Entry>(it);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
-  // 본문 클릭 → 디테일 보기/작성 토글
-  function handleToggleFromContent() {
-    if (editing) return
+  // 부모에서 it이 갱신되면 로컬 상태도 동기화
+  useEffect(() => {
+    setEntry(it);
+  }, [it.id, it.is_resolved, it.is_public, it.content, it.details_md]);
+
+  // 디테일 저장
+  const saveDetails = (md: string) => {
+    onSaveDetails(entry.id, md);
+    setEditing(false);
+    setOpen(true);
+  };
+
+  // 본문 클릭 시: 디테일이 있으면 토글, 없으면 에디터 열기
+  const handleToggleFromContent = () => {
+    if (editing) return;
     if (entry.details_md && entry.details_md.trim().length > 0) {
-      setOpen((o) => !o)
+      setOpen((o) => !o);
     } else {
-      setEditing(true)
+      setEditing(true);
     }
-  }
-
-  async function saveDetails(md: string) {
-    await onSaveDetails(entry.id, md)
-    setEntry((prev) => ({ ...prev, details_md: md }))
-    setEditing(false)
-    setOpen(true)
-  }
+  };
 
   return (
     <li className="item">
@@ -69,11 +70,11 @@ function EntryRow({
           })}
         </span>
         <span className={`badge ${entry.is_public ? 'pub' : 'priv'}`}>
-          {entry.is_public ? (compact ? '공유됨' : 'Published') : (compact ? '🤫프라이빗' : 'Private')}
+          {entry.is_public ? '공유됨' : '🤫프라이빗'}
         </span>
       </div>
 
-      {/* 본문(클릭 가능) */}
+      {/* 본문 영역(클릭 가능) */}
       <div
         className="entry-clickable"
         onClick={handleToggleFromContent}
@@ -83,7 +84,6 @@ function EntryRow({
         <p className="entry-text" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
           {entry.content}
         </p>
-
         {!editing && (!entry.details_md || entry.details_md.trim().length === 0) && (
           <div style={{ marginTop: 6, fontSize: 12, color: '#89928a' }}>
             더 자세히 적고 싶다면 이 글 영역을 눌러보세요 ✏️
@@ -91,13 +91,13 @@ function EntryRow({
         )}
       </div>
 
-      {/* 액션 버튼들 (이벤트 전파 방지) */}
+      {/* 하단 조작 버튼들 */}
       <div className="row small-btns" style={{ gap: 8 }}>
         <button
           className="btn-mini"
           onClick={(e) => {
-            e.stopPropagation()
-            router.push(`/dashboard/entry/${entry.id}`)
+            e.stopPropagation();
+            router.push(`/dashboard/entry/${entry.id}`);
           }}
         >
           편집
@@ -105,40 +105,51 @@ function EntryRow({
         <button
           className="btn-mini2"
           onClick={(e) => {
-            e.stopPropagation()
-            onRemove(entry.id)
+            e.stopPropagation();
+            onRemove(entry.id);
           }}
         >
           삭제
         </button>
-
-        {/* 해결/미해결 토글 라벨 — 삭제 옆에만 두기 */}
+        {/* 해결/미해결 라벨 (삭제 옆 하나만) */}
         <span
           role="button"
           tabIndex={0}
           title="클릭해서 상태 바꾸기"
           onClick={(e) => {
-            e.stopPropagation()
-            onToggleResolved(entry.id, !entry.is_resolved)
+            e.stopPropagation();
+            onToggleResolved(entry.id, !entry.is_resolved);
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') onToggleResolved(entry.id, !entry.is_resolved)
+            if (e.key === 'Enter') onToggleResolved(entry.id, !entry.is_resolved);
           }}
           className={`tag ${entry.is_resolved ? 'tag--ok' : 'tag--todo'}`}
-          style={{ marginLeft: 6 }}
+          style={{ marginLeft: 6, cursor: 'pointer' }}
         >
           {entry.is_resolved ? '완료' : '급해!'}
         </span>
       </div>
 
-      {/* 디테일 에디터 */}
+      {/* 디테일 편집기 (원하면 이 부분을 실제 DetailsEditor로 교체) */}
       {editing && (
         <div style={{ marginTop: 10 }}>
-          <DetailsEditor
+          {/* DetailsEditor 컴포넌트를 쓰는 경우 */}
+          {/* <DetailsEditor
             initial={entry.details_md ?? ''}
-            onSave={(text: string) => saveDetails(text)}
+            onSave={(text) => saveDetails(text)}
             onCancel={() => setEditing(false)}
+          /> */}
+
+          {/* 임시 텍스트에어리어 예시 (DetailsEditor 없을 때) */}
+          <textarea
+            defaultValue={entry.details_md ?? ''}
+            rows={6}
+            style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}
+            onBlur={(e) => saveDetails(e.currentTarget.value)}
           />
+          <div style={{ marginTop: 6, fontSize: 12, color: '#888' }}>
+            포커스를 벗어나면 자동 저장합니다
+          </div>
         </div>
       )}
 
@@ -154,13 +165,16 @@ function EntryRow({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <Markdown content={entry.details_md ?? ''} />
+          {/* Markdown 컴포넌트가 있으면 사용하세요 */}
+          {/* <Markdown content={entry.details_md} /> */}
+          <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{entry.details_md}</div>
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <button
               className="btn-mini"
               onClick={(e) => {
-                e.stopPropagation()
-                setEditing(true)
+                e.stopPropagation();
+                setEditing(true);
               }}
             >
               디테일 수정
@@ -169,7 +183,7 @@ function EntryRow({
         </div>
       )}
     </li>
-  )
+  );
 }
 
 /* ------------------------------ 페이지 ------------------------------ */
