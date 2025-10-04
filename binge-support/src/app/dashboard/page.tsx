@@ -361,7 +361,7 @@ const unresolvedSorted = useMemo(() => {
             </span>
             {/* 공개여부만 유지 (해결/미해결 라벨은 아래 액션 줄에만 둠) */}
             <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-              {it.is_public ? 'Published' : 'Private'}
+              {it.is_public ? '공유됨' : '🤫프라이빗'}
             </span>
           </div>
 
