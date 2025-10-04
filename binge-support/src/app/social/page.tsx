@@ -29,9 +29,7 @@ export default function CommunityFeedPage() {
         .eq('is_public', true)
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
-        setEntries(data as Entry[])
-      }
+      if (!error && data) setEntries(data as Entry[])
       setLoading(false)
     })()
   }, [])
@@ -41,11 +39,10 @@ export default function CommunityFeedPage() {
   return (
     <main className="container">
       <div className="card" style={{ background: '#fff', padding: '16px' }}>
-        
-        {/* Back button */}
+        {/* ✅ 추가: 뒤로가기 버튼 (디자인 그대로, 한 줄만 추가) */}
         <button
           className="btn-ghost"
-          style={{ marginBottom: '16px' }}
+          style={{ marginBottom: '12px' }}
           onClick={() => router.push('/dashboard')}
         >
           ← Back to My Journal
