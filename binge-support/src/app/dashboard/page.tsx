@@ -289,7 +289,7 @@ export default function Dashboard() {
                 <>
                   <p style={{ margin: '6px 0 8px' }}>{it.content}</p>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => startEdit(it)}>Edit</button>
+                    <button type="button" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>Edit</button>
                     <button type="button" onClick={() => removeEntry(it.id)}>Delete</button>
                     <button type="button" onClick={() => togglePublic(it.id, !(it.is_public ?? false))}>
                       {it.is_public ? 'Unpublish' : 'Publish'}
