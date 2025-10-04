@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 onClick={createEntry}
                 style={{
                   backgroundColor: '#6ba292',
-                  color: '#0e221c',
+                  color: '#ffffff',
                   border: 'none',
                   borderRadius: 9999,           // pill
                   padding: '10px 20px',

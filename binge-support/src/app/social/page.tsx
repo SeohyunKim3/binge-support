@@ -12,9 +12,9 @@ type Entry = {
 }
 
 export default function CommunityFeedPage() {
+  const router = useRouter()
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     ;(async () => {
@@ -38,32 +38,40 @@ export default function CommunityFeedPage() {
 
   return (
     <main className="container">
-      <div className="card" style={{ background: '#fff', padding: '16px' }}>
-        {/* ✅ 추가: 뒤로가기 버튼 (디자인 그대로, 한 줄만 추가) */}
+      <div className="card" style={{ background: '#fff', padding: 16 }}>
+        {/* 돌아가기 버튼 (저널로) */}
         <button
           className="btn-ghost"
-          style={{ marginBottom: '12px' }}
+          style={{ marginBottom: 12 }}
           onClick={() => router.push('/dashboard')}
         >
           ← Back to My Journal
         </button>
 
-        <h2 className="page-title" style={{ marginBottom: 8 }}>
-          Community Feed
-        </h2>
+        <h2 className="page-title" style={{ marginBottom: 8 }}>Community Feed</h2>
         <p className="subtle">Notes members chose to publish. Please be kind & respectful.</p>
 
         <div className="gallery-grid">
           {entries.map((it) => (
             <div key={it.id} className="gallery-card">
+              {/* ✅ 예전 스타일로 복구: 회색 배경 제거, 초록색 텍스트 */}
               <button
-                className="username-link"
-                onClick={() => router.push(`/user/${it.profiles?.username}`)}
-                style={{ fontWeight: 'bold', marginBottom: '4px' }}
+                className="link"
+                style={{
+                  fontWeight: 700,
+                  color: '#2e7d32',
+                  marginBottom: 8,
+                  padding: 0,
+                }}
+                onClick={() =>
+                  router.push(`/user/${encodeURIComponent(it.profiles?.username ?? 'anonymous')}`)
+                }
               >
-                @{it.profiles?.username || 'Anonymous'}
+                @{it.profiles?.username ?? 'anonymous'}
               </button>
+
               <p className="gallery-text">{it.content}</p>
+
               <div className="gallery-date">
                 {new Date(it.created_at).toLocaleDateString('en-US', {
                   month: 'short',
@@ -72,6 +80,7 @@ export default function CommunityFeedPage() {
               </div>
             </div>
           ))}
+
           {entries.length === 0 && <p className="subtle">No community posts yet.</p>}
         </div>
       </div>
