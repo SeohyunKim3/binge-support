@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
+import confetti from "canvas-confetti";
 
 type Entry = {
   id: string
@@ -71,6 +72,15 @@ export default function DashboardPage() {
           e.id === id ? { ...e, is_resolved: makeResolved } : e
         )
       )
+      if (makeResolved) {
+        // "해결됨"으로 바뀔 때만 폭죽 터지게
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#9be2b0", "#7fc8a9", "#4b8a70", "#e8f7ec"],
+        });
+      }
     }
   }
 
