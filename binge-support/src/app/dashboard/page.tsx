@@ -197,7 +197,7 @@ export default function DashboardPage() {
                       <p>  </p>
                       <p>  </p>
                       <p>  </p>
-                      <p style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
+                      <p style={{ margin: '8px 3 10px', whiteSpace: 'pre-wrap' }}>{it.content}</p>
                       <p>  </p>
                       {/* compact buttons */}
                       <div className="row small-btns">
