@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
 import confetti from "canvas-confetti";
+import Markdown from '@/components/Markdown';
+import DetailsEditor from '@/components/DetailsEditor';
 
 
 
@@ -15,6 +17,8 @@ type Entry = {
   is_public: boolean
   is_resolved: boolean
   is_deleted: boolean
+  details_md?: string | null   // ✅ 추가
+
 }
 
 export default function DashboardPage() {
@@ -283,7 +287,7 @@ function MindfulTimer() {
   async function loadEntries(userId: string) {
     const { data } = await supabase
       .from('entries')
-      .select('id, user_id, content, created_at, is_public, is_resolved')
+      .select('id, user_id, content, created_at, is_public, is_resolved, details_md')
       .eq('user_id', userId)
       .eq('is_deleted', false)  
       .order('created_at', { ascending: false })
@@ -640,38 +644,130 @@ const unresolvedSorted = useMemo(() => {
       <div key={dayKey}>
         <div className="date-head">{formatDateHeader(dayKey)}</div>
         <ul className="list">
-          {grouped[dayKey].map((it, idx) => (
-            <li key={it.id} className="item">
-              <div className="item-head">
-                <span className="item-time">
-                  조각 #{idx + 1} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <span className={`badge ${it.is_public ? 'pub' : 'priv'}`}>
-                  {it.is_public ? '공유됨' : '🤫프라이빗'}
-                </span>
-              </div>
+        {grouped[dayKey].map((it, idx) => {
+  // 🔽 각 아이템별 로컬 상태
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [entry, setEntry] = useState(it);
 
-              <p className="entry-text" style={{ margin: '8px 0 10px', whiteSpace: 'pre-wrap' }}>
-                {it.content}
-              </p>
+  // 디테일 저장
+  async function saveDetails(md: string) {
+    const { error } = await supabase
+      .from('entries')
+      .update({ details_md: md })
+      .eq('id', entry.id);
 
-              <div className="row small-btns">
-                <button className="btn-mini" onClick={() => router.push(`/dashboard/entry/${it.id}`)}>✍🏻</button>
-                <button className="btn-mini2" onClick={() => removeEntry(it.id)}>🗑️</button>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  title="클릭해서 상태 바꾸기"
-                  onClick={() => toggleResolved(it.id, !it.is_resolved)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') toggleResolved(it.id, !it.is_resolved) }}
-                  className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
-                  style={{ marginLeft: 6 }}
-                >
-                  {it.is_resolved ? '해결됨' : '급해!'}
-                </span>
-              </div>
-            </li>
-          ))}
+    if (!error) {
+      setEntry({ ...entry, details_md: md });
+      setEditing(false);
+      setOpen(true);
+    } else {
+      alert(error.message);
+    }
+  }
+
+  // 본문을 클릭했을 때 동작 (버튼 클릭은 stopPropagation 처리)
+  function handleToggleFromContent() {
+    if (editing) return; // 에디팅 중에는 토글 방지
+    if (entry.details_md && entry.details_md.trim().length > 0) {
+      setOpen((o) => !o);       // 이미 디테일이 있으면 보기/접기
+    } else {
+      setEditing(true);          // 없으면 에디터 열기
+    }
+  }
+
+  return (
+    <li key={entry.id} className="item">
+      {/* 상단 헤더 (시간/상태) */}
+      <div className="item-head">
+        <span className="item-time">
+          조각 #{idx + 1} • {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+        <span className={`badge ${entry.is_public ? 'pub' : 'priv'}`}>
+          {entry.is_public ? 'Published' : 'Private'}
+        </span>
+      </div>
+
+      {/* 🔽 본문: 클릭하면 디테일 열기/에디터 열기 */}
+      <div
+        className="entry-clickable"
+        onClick={handleToggleFromContent}
+        title="클릭하여 디테일을 열거나 추가해보세요"
+        style={{
+          cursor: 'pointer',
+          userSelect: 'text',
+          margin: '8px 0 10px',
+        }}
+      >
+        <p className="entry-text" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+          {entry.content}
+        </p>
+
+        {/* 디테일이 없는 경우 가이드 힌트 (작게 회색) */}
+        {!editing && (!entry.details_md || entry.details_md.trim().length === 0) && (
+          <div style={{ marginTop: 6, fontSize: 12, color: '#89928a' }}>
+            더 자세히 적고 싶다면 이 글 영역을 눌러보세요 ✏️
+          </div>
+        )}
+      </div>
+
+      {/* 하단 조작 버튼 (편집/삭제/상태변경 등) — 클릭 이벤트 전파 막기 */}
+      <div className="row small-btns" style={{ gap: 8 }}>
+        <button
+          className="btn-mini"
+          onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/entry/${entry.id}`); }}
+        >
+          편집
+        </button>
+        <button
+          className="btn-mini2"
+          onClick={(e) => { e.stopPropagation(); removeEntry(entry.id); }}
+        >
+          삭제
+        </button>
+
+        {/* (참고) 상태 토글/공개여부 버튼 등도 여기서 e.stopPropagation() 써주세요 */}
+      </div>
+
+      {/* 🔽 디테일 에디터 (처음엔 에디터로 시작) */}
+      {editing && (
+        <div style={{ marginTop: 10 }}>
+          <DetailsEditor
+            initial={entry.details_md ?? ''}
+            onSave={saveDetails}
+            onCancel={() => setEditing(false)}
+          />
+        </div>
+      )}
+
+      {/* 🔽 디테일 뷰어(접히는 영역) */}
+      {!editing && entry.details_md && open && (
+        <div
+          style={{
+            marginTop: 12,
+            borderLeft: '3px solid #d7ead7',
+            padding: '8px 12px',
+            background: '#f9fdf9',
+            borderRadius: 8,
+          }}
+          onClick={(e) => e.stopPropagation()} // 뷰어 영역 클릭 시 본문 토글 방지
+        >
+          <Markdown md={entry.details_md} />
+
+          {/* 디테일 수정 버튼 (선택) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <button
+              className="btn-mini"
+              onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+            >
+              디테일 수정
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+})}
         </ul>
       </div>
     ))}
