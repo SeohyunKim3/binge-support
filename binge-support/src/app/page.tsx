@@ -57,8 +57,8 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: 720, margin: '40px auto', fontFamily: 'system-ui' }}>
-      <h1>Binge Support (MVP)</h1>
-      <p>Private space to log triggers & feelings. This app is not a substitute for professional care.</p>
+      <h1>Dolla (MVP))</h1>
+      <p>Private space to log triggers & feelings.</p>
 
       <p>
         Signed in as <strong>{session.user.email}</strong>
@@ -88,10 +88,6 @@ export default function Home() {
       )}
 
       <hr style={{ margin: '32px 0' }} />
-      <h3>Immediate help</h3>
-      <p>
-        If you feel you might hurt yourself or others, please contact emergency services immediately.
-      </p>
     </main>
   )
 }
