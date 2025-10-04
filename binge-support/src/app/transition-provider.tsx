@@ -14,11 +14,11 @@ export default function TransitionProvider({
     <AnimatePresence mode="wait">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 2 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
+        exit={{ opacity: 0, y: -2 }}
         transition={{
-          duration: 0.6,
+          duration: 0.2,
           ease: [0.33, 1, 0.68, 1],
         }}
         style={{
