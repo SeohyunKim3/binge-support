@@ -145,30 +145,91 @@ export default function EntryEditorPage() {
         {createdAt && <div className="paper-meta">만든일: {new Date(createdAt).toLocaleString()}</div>}
         {err && <div className="paper-meta" style={{ color: 'var(--danger)' }}>{err}</div>}
 
-        {/* 본문 편집 */}
-        <h3 style={{ marginTop: 16, marginBottom: 8 }}>본문</h3>
-        <textarea
-          className="paper-editor"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Write freely…"
-        />
+{/* 본문 입력 */}
+<div style={{ marginBottom: 24 }}>
+  <h3 style={{
+    fontSize: '15px',
+    color: '#385c44',
+    marginBottom: '6px',
+    fontWeight: 600
+  }}>본문</h3>
 
-        {/* 마크다운 상세 편집 + 미리보기 */}
-        <h3 style={{ marginTop: 16, marginBottom: 8 }}>상세(마크다운)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <textarea
-            className="paper-editor"
-            style={{ minHeight: 240 }}
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="### 예시\n- 항목 1\n- 항목 2"
-          />
-          <div>
-            <div className="paper-meta" style={{ marginBottom: 8 }}>미리보기</div>
-            <Markdown content={details} />
-          </div>
-        </div>
+  <textarea
+    className="paper-editor"
+    value={content}
+    onChange={(e) => setContent(e.target.value)}
+    placeholder="Write freely…"
+    style={{
+      width: '100%',
+      height: '240px', // ✅ 이전보다 확실히 작게
+      border: '2px solid #b8d8b8',
+      borderRadius: '12px',
+      padding: '14px',
+      fontSize: '15px',
+      lineHeight: 1.6,
+      background: '#fdfdfd',
+      boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.04)',
+      resize: 'vertical',
+      transition: 'border-color 0.2s ease',
+    }}
+    onFocus={(e) => e.currentTarget.style.borderColor = '#6ba292'}
+    onBlur={(e) => e.currentTarget.style.borderColor = '#b8d8b8'}
+  />
+</div>
+
+{/* 상세(마크다운) */}
+<div style={{
+  borderTop: '2px dashed #d8e7d8',
+  paddingTop: '20px',
+  marginTop: '16px'
+}}>
+  <h3 style={{
+    fontSize: '15px',
+    fontWeight: 700,
+    color: '#335f3e',
+    marginBottom: '10px'
+  }}>
+    상세 (마크다운)
+    <span style={{
+      fontSize: '12px',
+      color: '#7a8a7a',
+      marginLeft: '6px'
+    }}>— 아이디어 확장 또는 세부 기록</span>
+  </h3>
+
+  <div style={{
+    background: '#f7faf7',
+    border: '1px solid #d3e5d3',
+    borderRadius: '10px',
+    padding: '12px 14px',
+    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.03)',
+  }}>
+    <textarea
+      placeholder="여기에 세부 내용을 적어보세요..."
+      rows={6}
+      style={{
+        width: '100%',
+        border: 'none',
+        outline: 'none',
+        resize: 'vertical',
+        background: 'transparent',
+        fontSize: '14px',
+        color: '#444',
+        lineHeight: 1.5,
+      }}
+    />
+  </div>
+
+  <div style={{
+    marginTop: '8px',
+    fontSize: '12px',
+    color: '#7a8a7a',
+    textAlign: 'right',
+    fontStyle: 'italic'
+  }}>
+    기록장 화면에서는 이렇게 보여요:
+  </div>
+</div>
       </div>
     </main>
   )
