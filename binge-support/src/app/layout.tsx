@@ -33,8 +33,8 @@ export default function RootLayout({
         stats={{
           dashboardCount: 3,         // 오늘 작성한 조각 수
           communityCount: 1,         // 커뮤니티 새 글 수
-          trashCount: 2,             // 휴지통 안 글 수
-          todayLabel: '10/05 (일)',  // 오늘 날짜나 짧은 요약
+          trashCount: 0,             // 휴지통 안 글 수
+          todayLabel: '오늘',  // 오늘 날짜나 짧은 요약
         }}
       />        {/* Page-flip transition wrapper (client component) */}
         <TransitionProvider>
