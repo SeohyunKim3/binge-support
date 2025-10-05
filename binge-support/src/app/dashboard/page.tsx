@@ -547,8 +547,9 @@ const ordinalById = useMemo(() => {
                   {sortedDays.length === 0 && <p className="subtle">아직 조각이 없어요ㅠㅠ 지금 작성해보세요!</p>}
                   {sortedDays.map((dayKey) => (
                     <div key={dayKey}>
-                      <div className="date-head">{formatDateHeader(dayKey)}</div>
-                      <ul className="list">
+<div id={`d-${dayKey}`} className="date-head">
+  {formatDateHeader(dayKey)}
+</div>                      <ul className="list">
                         {grouped[dayKey].map((it) => (
                           <EntryRow
                             key={it.id}
