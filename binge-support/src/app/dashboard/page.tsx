@@ -29,7 +29,7 @@ type EntryPatch = Partial<{
 /* ------------ 개별 카드 (읽기 전용. 편집은 별도 페이지) ------------ */
 type RowProps = {
   it: Entry
-  idx: number
+  num: number
   onRemove: (id: string) => void
   onToggleResolved: (id: string, make: boolean) => void
   onTogglePublic: (id: string, make: boolean) => void
@@ -38,7 +38,7 @@ type RowProps = {
 
 function EntryRow({
   it,
-  idx,
+  num,
   onRemove,
   onToggleResolved,
   onTogglePublic,
@@ -63,8 +63,7 @@ function EntryRow({
     <li className="item">
       <div className="item-head">
         <span className="item-time">
-          조각 #{idx + 1} •{' '}
-          {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        조각 #{num} • {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
 
         {/* 공개/프라이빗 배지 클릭 → 공개 상태 토글 */}
@@ -318,6 +317,16 @@ export default function DashboardPage() {
     [entries]
   )
 
+  // 오래된 → 최신 순으로 번호 매기기
+const ordinalById = useMemo(() => {
+  const asc = [...entries].sort((a, b) =>
+    a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+  )
+  const map: Record<string, number> = {}
+  asc.forEach((e, i) => { map[e.id] = i + 1 })
+  return map
+}, [entries])
+
   /* ------------------ actions (낙관적 업데이트) ------------------ */
   async function createEntry() {
     const text = content.trim()
@@ -520,11 +529,11 @@ export default function DashboardPage() {
                 <>
                   {unresolvedSorted.length === 0 && <p className="subtle">미해결 조각이 없어요. 모두 해결되었네요! 🎉</p>}
                   <ul className="list">
-                    {unresolvedSorted.map((it, idx) => (
+                    {unresolvedSorted.map((it) => (
                       <EntryRow
                         key={it.id}
                         it={it}
-                        idx={idx}
+                        num={ordinalById[it.id]}
                         compact
                         onRemove={removeEntry}
                         onToggleResolved={toggleResolved}
@@ -540,11 +549,11 @@ export default function DashboardPage() {
                     <div key={dayKey}>
                       <div className="date-head">{formatDateHeader(dayKey)}</div>
                       <ul className="list">
-                        {grouped[dayKey].map((it, idx) => (
+                        {grouped[dayKey].map((it) => (
                           <EntryRow
                             key={it.id}
                             it={it}
-                            idx={idx}
+                            num={ordinalById[it.id]}
                             onRemove={removeEntry}
                             onToggleResolved={toggleResolved}
                             onTogglePublic={togglePublic}
