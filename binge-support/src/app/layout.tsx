@@ -29,30 +29,29 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* 사이드바 */}
         <Sidebar />
 
-        {/* ✅ TransitionProvider가 children을 감싸도록 변경 */}
-        <TransitionProvider>
-          <div style={{ marginLeft: 72, transition: 'margin-left .2s ease' }}>
-            {children}
-          </div>
-        </TransitionProvider>
+        {/* 콘텐츠는 딱 한 번만 렌더링 */}
+        <div id="app-main" style={{ marginLeft: 72, transition: "margin-left .2s ease" }}>
+          <TransitionProvider>{children}</TransitionProvider>
+        </div>
 
-        {/* ✅ 사이드바 열림/닫힘에 따른 여백 조정 스크립트 */}
+        {/* 사이드바 열림/닫힘에 맞춰 margin-left만 바꿔줌 */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function(){
+                const main = document.getElementById('app-main');
+                const sb = document.querySelector('.sb');
+                if(!main || !sb) return;
+
                 const ro = new ResizeObserver(() => {
-                  var sb = document.querySelector('.sb');
-                  var main = document.querySelector('body > div[style]');
-                  if(!sb||!main) return;
                   main.style.marginLeft = sb.classList.contains('open') ? '220px' : '72px';
                 });
-                var el = document.querySelector('.sb');
-                if(el) ro.observe(el);
+                ro.observe(sb);
               })();
-            `
+            `,
           }}
         />
 
