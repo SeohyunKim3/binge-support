@@ -94,7 +94,7 @@ function EntryRow({
         </p>
         {!it.details_md && (
           <div style={{ marginTop: 6, fontSize: 12, color: '#89928a' }}>
-            디테일은 <b>편집</b> 화면에서 작성할 수 있어요 ✏️
+        <b>편집</b>에서 상세 설명 추가하기
           </div>
         )}
       </div>

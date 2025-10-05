@@ -47,7 +47,16 @@ export default function TrashPage() {
   if (loading) return <p>로딩...</p>
 
   return (
+    
     <main style={{ padding: '40px 20px', maxWidth: 700, margin: '0 auto' }}>
+              <div style={{ marginTop: 0 }}>
+        <button
+          className="btn-ghost2"
+          onClick={() => router.push('/dashboard')}
+        >
+          ← 기록으로 돌아가기
+        </button>
+      </div>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>휴지통</h2>
       <p style={{ color: '#777', marginBottom: 20 }}>삭제된 기록들을 확인하고 복원하거나 완전히 삭제할 수 있습니다.</p>
 
@@ -95,15 +104,6 @@ export default function TrashPage() {
           ))}
         </ul>
       )}
-
-      <div style={{ marginTop: 30 }}>
-        <button
-          className="btn-ghost"
-          onClick={() => router.push('/dashboard')}
-        >
-          ← 나의 기록으로 돌아가기
-        </button>
-      </div>
     </main>
   )
 }
