@@ -322,12 +322,47 @@ export default function DashboardPage() {
   async function createEntry() {
     const text = content.trim()
     if (!text) return
+  
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    // 서버에 맡김 (INSERT 후 Realtime이 목록에 넣어줌)
-    const { error } = await supabase.from('entries').insert({ user_id: user.id, content: text, is_public: publish })
-    if (error) return alert(error.message)
-    setContent(''); setPublish(false)
+  
+    // 1️⃣ DB에 새 entry 삽입
+    const { data: inserted, error } = await supabase
+      .from('entries')
+      .insert({
+        user_id: user.id,
+        content: text,
+        is_public: publish,
+        is_deleted: false,
+        is_resolved: false,
+      })
+      .select('id, user_id, content, created_at, is_public, is_resolved, is_deleted, details_md')
+      .single()
+  
+    if (error) {
+      alert(error.message)
+      return
+    }
+  
+    // 2️⃣ 입력창 초기화
+    setContent('')
+    setPublish(false)
+  
+    // 3️⃣ 로컬 상태에 즉시 반영
+    setEntries(prev => [inserted as Entry, ...prev])
+  
+    // 4️⃣ ✅ 다른 페이지(대시보드/에디터 등)도 즉시 반영되도록 전역 이벤트 발행
+    window.dispatchEvent(
+      new CustomEvent('entry-updated', {
+        detail: {
+          id: inserted.id,
+          content: inserted.content,
+          is_public: inserted.is_public,
+          is_resolved: inserted.is_resolved,
+          details_md: inserted.details_md,
+        } as EntryPatch,
+      })
+    )
   }
 
   async function removeEntry(id: string) {
