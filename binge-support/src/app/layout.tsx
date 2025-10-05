@@ -1,9 +1,10 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TransitionProvider from "./transition-provider";
-import Sidebar from '@/components/Sidebar'
+import Sidebar from "@/components/Sidebar";
+import Shell from './shell' 
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,32 +28,31 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* 사이드바 */}
-        <Sidebar />
-        {/* 콘텐츠는 딱 한 번만 렌더링 */}
-        <div id="app-main" style={{ marginLeft: 72, transition: "margin-left .2s ease" }}>
-          <TransitionProvider>{children}</TransitionProvider>
-        </div>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+          flexDirection: "column",
+          background: "rgba(255,255,255,0.65)",
+        }}
+      >
+        {/* 본문 */}
+        <main
+      style={{
+        marginLeft: '0', // 열릴 때만 여백 생김
+        transition: 'margin-left 0.25s ease',
+        minHeight: '100vh',
+        width: '100%',
+        overflowX: 'hidden',
+        position: 'relative',
+      }}
+          className="main-content"
+        >
+          <Shell>{children}</Shell>
+        </main>
 
-        {/* 사이드바 열림/닫힘에 맞춰 margin-left만 바꿔줌 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                const main = document.getElementById('app-main');
-                const sb = document.querySelector('.sb');
-                if(!main || !sb) return;
-
-                const ro = new ResizeObserver(() => {
-                  main.style.marginLeft = sb.classList.contains('open') ? '220px' : '72px';
-                });
-                ro.observe(sb);
-              })();
-            `,
-          }}
-        />
-
+        {/* 푸터 */}
         <footer
           style={{
             textAlign: "center",
@@ -64,11 +64,29 @@ export default function RootLayout({
             fontFamily: "var(--font-geist-mono)",
             background: "rgba(255,255,255,0.4)",
             backdropFilter: "blur(10px)",
+            marginTop: "auto", // 👈 핵심
           }}
         >
-          © SoulKim 2025.
+          © SoulKim 2025
         </footer>
-      </body>
-    </html>
+
+    {/* 사이드바 열림 감시 */}
+    <script
+    dangerouslySetInnerHTML={{
+      __html: `
+        (function(){
+          var html = document.documentElement;
+          html.classList.add('no-sb-init');
+          try {
+            var open = localStorage.getItem('sb-open') === '1';
+            html.style.setProperty('--sbw', open ? '220px' : '72px');
+          } catch(e){}
+          html.classList.remove('no-sb-init');
+        })();
+      `,
+    }}
+  />
+  </body>
+</html>
   );
 }

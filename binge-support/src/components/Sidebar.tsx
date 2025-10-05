@@ -20,10 +20,10 @@ type Item = {
 }
 
 const items: Item[] = [
-  { key: 'home', label: '대시보드', href: '/dashboard', icon: <CiHome size={24} /> },
-  { key: 'community', label: '커뮤니티', href: '/social', icon: <CiChat1 size={24} /> },
-  { key: 'trash', label: '휴지통', href: '/trash', icon: <CiTrash size={24} /> },
-  { key: 'calendar', label: '달력', href: '/calendar', icon: <CiCalendar size={24} /> },
+  { key: 'home', label: '대시보드', href: '/dashboard', icon: <CiHome size={20} /> },
+  { key: 'community', label: '커뮤니티', href: '/social', icon: <CiChat1 size={20} /> },
+  { key: 'trash', label: '휴지통', href: '/trash', icon: <CiTrash size={20} /> },
+  { key: 'calendar', label: '달력', href: '/calendar', icon: <CiCalendar size={20} /> },
 ]
 
 export default function Sidebar() {
@@ -60,8 +60,7 @@ export default function Sidebar() {
             background: #fff;
             color: #395a4e;
             display:flex;align-items:center;justify-content:center;
-            box-shadow: 0 4px 12px rgba(0,0,0,.06);
-          }
+
           @media(min-width:769px){ .sb-reopen{ display:none; } }
         `}</style>
       </button>
@@ -125,20 +124,21 @@ export default function Sidebar() {
           position: fixed; left:0; top:0; bottom:0;
           width: 72px;  /* 접힌 폭 */
           background: var(--sb-bg);
-          border-right: 1px solid var(--sb-border);
+          border-right: none !important;
           padding: 12px 12px;
           display:flex; flex-direction:column; gap:12px;
           z-index: 50;
+          box-shadow: 0 6px 20px rgba(0,0,0,.06); 
         }
         .sb.open{ width: 220px; transition: width .2s ease; }
         .sb.closed{ width: 72px; transition: width .2s ease; }
 
         .sb-toggle{
           width: 48px; height: 48px; border-radius: 9999px;
-          border: 1px solid var(--sb-border);
+          border: 'none';
           background:#fff; color: var(--sb-icon);
-          display:flex; align-items:center; justify-content:center;
-          margin: 4px auto 8px;
+          display:flex; align-items:center; justify-content:flex-end;
+          margin: 4px 8px;
         }
 
         .sb-nav{ display:flex; flex-direction:column; gap:8px; margin-top: 8px; }
@@ -197,6 +197,8 @@ export default function Sidebar() {
           .sb{ width: 64px; padding:10px 10px; }
           .sb.open{ width: 200px; }
         }
+
+
       `}</style>
     </aside>
   )
