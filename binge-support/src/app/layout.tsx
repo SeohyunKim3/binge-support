@@ -4,6 +4,7 @@ import "./globals.css";
 import TransitionProvider from "./transition-provider";
 import Sidebar from "@/components/Sidebar";
 import Shell from './shell' 
+import { Poppins } from 'next/font/google'
 
 
 const geistSans = Geist({
@@ -16,9 +17,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: "Dolla by SoulKim",
-  description: "Dolgo Dolla",
+  title: "DOLLA",
+  description: "Dolgo Dolla by Soul Kim",
 };
 
 export default function RootLayout({

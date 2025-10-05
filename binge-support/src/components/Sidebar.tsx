@@ -41,11 +41,13 @@ export default function Sidebar() {
   if (mobileHidden) {
     // 모바일 “다시 열기” 플로팅 탭
     return (
+        
       <button
         aria-label="사이드바 열기"
         onClick={() => setMobileHidden(false)}
         className="sb-reopen"
       >
+        
         <CiMenuFries size={22} />
         <style jsx>{`
           .sb-reopen{
@@ -70,6 +72,30 @@ export default function Sidebar() {
   return (
     <aside className={`sb ${open ? 'open' : 'closed'}`}>
       {/* 상단 토글 버튼 */}
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: open ? 'center' : 'center',
+          marginLeft: open ? 0 : 0,
+          transition: 'none',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'Poppins, Pretendard, sans-serif',
+            fontWeight: 800,
+            letterSpacing: '2%',
+            fontSize: open ? 14 : 14,
+            color: '#4a6757',
+            textTransform: 'uppercase',
+            transition: 'none',
+          }}
+        >
+          DOLLA
+        </span>
+      </div>
       <button
         className="sb-toggle"
         aria-label={open ? '사이드바 접기' : '사이드바 펼치기'}
@@ -85,6 +111,7 @@ export default function Sidebar() {
           return (
             <Link key={it.key} href={it.href} className={`sb-item ${active ? 'active' : ''}`}>
               <span className="sb-icon">{it.icon}</span>
+              
 
               {/* 펼친 상태에서만 텍스트/미리보기 노출 */}
               {open && (

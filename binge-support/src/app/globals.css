@@ -445,6 +445,7 @@ body.sidebar-expanded .sidebar{ width: var(--sb-w-expanded); }
   border-radius: 10px;
   transition: background .12s ease, color .12s ease;
   position: relative;
+  
 }
 
 /* 아이콘 원 프레임 (정중앙 정렬) */
@@ -519,4 +520,13 @@ body.sidebar-expanded .sb-text{ display: block; }
 @media (max-width: 820px){
   body.with-sidebar #page{ margin-left: var(--sb-w); }
   body.with-sidebar.sidebar-expanded #page{ margin-left: var(--sb-w-expanded); }
+}
+
+a {
+  text-decoration: none;
+  color: inherit; /* 기본 색상 유지 */
+}
+
+a:hover {
+  text-decoration: none; /* hover 시에도 밑줄 제거 */
 }
