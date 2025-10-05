@@ -1,475 +1,203 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import {
+  CiHome,
+  CiChat1,
+  CiTrash,
+  CiCalendar,
+  CiMenuFries, // 햄버거/토글 아이콘
+} from 'react-icons/ci'
 
-type Stats = {
-  dashboardCount?: number;
-  communityCount?: number;
-  trashCount?: number;
-  todayLabel?: string;
-};
+type Item = {
+  key: string
+  label: string
+  href: string
+  icon: React.ReactNode
+  preview?: string
+}
 
-type Props = {
-  stats?: Stats;
-};
+const items: Item[] = [
+  { key: 'home', label: '대시보드', href: '/dashboard', icon: <CiHome size={24} /> },
+  { key: 'community', label: '커뮤니티', href: '/social', icon: <CiChat1 size={24} /> },
+  { key: 'trash', label: '휴지통', href: '/trash', icon: <CiTrash size={24} /> },
+  { key: 'calendar', label: '달력', href: '/calendar', icon: <CiCalendar size={24} /> },
+]
 
-export default function Sidebar({ stats }: Props) {
-  const pathname = usePathname();
+export default function Sidebar() {
+  const pathname = usePathname()
+  const [open, setOpen] = useState(true)
+  const [mobileHidden, setMobileHidden] = useState(false)
 
-  // 화면 폭 감지 (모바일이면 기본 접힘)
-  const [isMobile, setIsMobile] = useState(false);
-  const [collapsed, setCollapsed] = useState(false); // 접힘(아이콘만)
-  const [hidden, setHidden] = useState(false);       // 모바일에서 완전히 숨김
-
+  // 모바일에서 닫기 동작: 완전히 숨김
   useEffect(() => {
-    const mql = window.matchMedia('(max-width: 768px)');
-    const set = () => setIsMobile(mql.matches);
-    set();
-    mql.addEventListener('change', set);
-    return () => mql.removeEventListener('change', set);
-  }, []);
+    const mq = window.matchMedia('(max-width: 768px)')
+    const initHidden = mq.matches // 모바일이면 기본은 열려있되, 닫기 누르면 완전 숨김
+    setMobileHidden(false) // 기본은 보이게
+  }, [])
 
-  // 초기 상태: 데스크탑은 펼침, 모바일은 완전 숨김
-  useEffect(() => {
-    const saved = localStorage.getItem('sb-collapsed');
-    const savedHidden = localStorage.getItem('sb-hidden');
-    if (savedHidden !== null) {
-      setHidden(savedHidden === 'true');
-    } else {
-      setHidden(isMobile); // 모바일 최초 로드에서 완전 숨김
-    }
-    if (saved !== null) {
-      setCollapsed(saved === 'true');
-    } else {
-      setCollapsed(isMobile); // 모바일이면 접힘으로 시작
-    }
-  }, [isMobile]);
-
-  // 레이아웃 여백을 CSS 변수로 노출 (#page에 margin-left 주기 위함)
-  useEffect(() => {
-    const width = hidden ? 0 : collapsed ? 72 : 240;
-    document.documentElement.style.setProperty('--sb-w', `${width}px`);
-  }, [collapsed, hidden]);
-
-  useEffect(() => {
-    localStorage.setItem('sb-collapsed', String(collapsed));
-  }, [collapsed]);
-
-  useEffect(() => {
-    localStorage.setItem('sb-hidden', String(hidden));
-  }, [hidden]);
-
-  const items = useMemo(
-    () => [
-      {
-        key: 'dashboard',
-        label: '대시보드',
-        href: '/dashboard',
-        preview: stats?.dashboardCount ? `오늘 ${stats.dashboardCount}개` : '',
-        icon: <HomeIcon />,
-      },
-      {
-        key: 'social',
-        label: '커뮤니티',
-        href: '/social',
-        preview: stats?.communityCount ? `새 글 ${stats.communityCount}` : '',
-        icon: <ChatIcon />,
-      },
-      {
-        key: 'trash',
-        label: '휴지통',
-        href: '/trash',
-        preview: stats?.trashCount ? `${stats.trashCount}개` : '',
-        icon: <TrashIcon />,
-      },
-      {
-        key: 'calendar',
-        label: '오늘로 이동',
-        href: '/dashboard#today',
-        preview: stats?.todayLabel ?? '',
-        icon: <CalendarIcon />,
-        onClick: (e: React.MouseEvent) => {
-          // 날짜 헤더가 id="d-YYYY-MM-DD" 형태면 거기로 스크롤
-          const today = new Date();
-          const y = today.getFullYear();
-          const m = String(today.getMonth() + 1).padStart(2, '0');
-          const d = String(today.getDate()).padStart(2, '0');
-          const el =
-            document.getElementById(`d-${y}-${m}-${d}`) ||
-            document.getElementById('today');
-          if (el) {
-            e.preventDefault();
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        },
-      },
-    ],
-    [stats]
-  );
-
-  // 현재 경로로 활성 상태 결정
-  const isActive = (href: string) =>
-    href !== '/' && pathname?.startsWith(href.split('#')[0]);
-
-  // 모바일에서 완전 숨김이면 떠 있는 오픈 버튼만
-  if (hidden && isMobile) {
+  if (mobileHidden) {
+    // 모바일 “다시 열기” 플로팅 탭
     return (
-      <>
-        <button
-          className="fabOpen"
-          aria-label="사이드바 열기"
-          onClick={() => setHidden(false)}
-        >
-          <ChevronRight />
-        </button>
-        <style jsx>{fabCSS}</style>
-      </>
-    );
+      <button
+        aria-label="사이드바 열기"
+        onClick={() => setMobileHidden(false)}
+        className="sb-reopen"
+      >
+        <CiMenuFries size={22} />
+        <style jsx>{`
+          .sb-reopen{
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 60;
+            width: 42px;
+            height: 42px;
+            border-radius: 9999px;
+            border: 1px solid #dfe7e3;
+            background: #fff;
+            color: #395a4e;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow: 0 4px 12px rgba(0,0,0,.06);
+          }
+          @media(min-width:769px){ .sb-reopen{ display:none; } }
+        `}</style>
+      </button>
+    )
   }
 
   return (
-    <>
-      <aside
-        className={[
-          'sidebar',
-          collapsed ? 'is-collapsed' : 'is-expanded',
-          hidden ? 'is-hidden' : '',
-        ].join(' ')}
-        aria-label="주요 탐색"
-        aria-expanded={!collapsed}
+    <aside className={`sb ${open ? 'open' : 'closed'}`}>
+      {/* 상단 토글 버튼 */}
+      <button
+        className="sb-toggle"
+        aria-label={open ? '사이드바 접기' : '사이드바 펼치기'}
+        onClick={() => setOpen(!open)}
       >
-        {/* 상단 토글 그룹 */}
-        <div className="top">
-          <button
-            className="toggle"
-            aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
-            onClick={() => setCollapsed((v) => !v)}
-            title={collapsed ? '펼치기' : '접기'}
-          >
-            {collapsed ? <ChevronRight /> : <ChevronLeft />}
-          </button>
+        <CiMenuFries size={22} />
+      </button>
 
-          {/* 모바일에서 완전히 숨김 */}
-          {isMobile && (
-            <button
-              className="toggle hide"
-              aria-label="사이드바 숨기기"
-              onClick={() => setHidden(true)}
-              title="숨기기"
-            >
-              <CloseIcon />
-            </button>
-          )}
-        </div>
+      {/* 네비게이션 */}
+      <nav className="sb-nav">
+        {items.map((it) => {
+          const active = pathname?.startsWith(it.href)
+          return (
+            <Link key={it.key} href={it.href} className={`sb-item ${active ? 'active' : ''}`}>
+              <span className="sb-icon">{it.icon}</span>
 
-        {/* 네비게이션 */}
-        <nav className="nav" aria-label="기본 메뉴">
-          {items.map((it) => (
-            <Link
-              key={it.key}
-              href={it.href}
-              className={[
-                'itemBtn',
-                isActive(it.href) ? 'active' : '',
-                collapsed ? 'mode-compact' : 'mode-wide',
-              ].join(' ')}
-              onClick={it.onClick as any}
-            >
-              {/* 원형 링 + 아이콘 */}
-              <span
-                className={[
-                  'ring',
-                  isActive(it.href) ? 'ring-active' : '',
-                ].join(' ')}
-              >
-                <span className="ico">{it.icon}</span>
-              </span>
-
-              {/* 펼친 상태에서만 라벨/미리보기 */}
-              {!collapsed && (
-                <>
-                  <span className="label">{it.label}</span>
-                  <span className="preview">{it.preview}</span>
-                </>
-              )}
-
-              {/* 접힘 + hover 툴팁 */}
-              {collapsed && (
-                <span className="tooltip" role="tooltip">
-                  {it.label}
+              {/* 펼친 상태에서만 텍스트/미리보기 노출 */}
+              {open && (
+                <span className="sb-text">
+                  <span className="sb-label">{it.label}</span>
+                  {it.preview && <span className="sb-preview">{it.preview}</span>}
                 </span>
               )}
+
+              {/* 접힌 상태 툴팁 */}
+              {!open && <span className="sb-tip">{it.label}</span>}
             </Link>
-          ))}
-        </nav>
-      </aside>
+          )
+        })}
+      </nav>
 
-      {/* 페이지 본문 여백 */}
-      <style jsx>{styles}</style>
-      <style jsx global>{globalPad}</style>
-    </>
-  );
+      {/* 모바일에서 "닫기" 버튼 */}
+      <button
+        className="sb-mobile-close"
+        onClick={() => setMobileHidden(true)}
+        aria-label="사이드바 닫기"
+      >
+        닫기
+      </button>
+
+      <style jsx>{`
+        :root{
+          --sb-bg:#ffffff;
+          --sb-border:#e6eee9;
+          --sb-icon:#5a736a;
+          --sb-icon-light:#82988f;
+          --sb-active:#e6f0eb;
+          --sb-hover:#eef5f1;
+          --sb-shadow:0 6px 20px rgba(0,0,0,.06);
+        }
+        .sb{
+          position: fixed; left:0; top:0; bottom:0;
+          width: 72px;  /* 접힌 폭 */
+          background: var(--sb-bg);
+          border-right: 1px solid var(--sb-border);
+          padding: 12px 12px;
+          display:flex; flex-direction:column; gap:12px;
+          z-index: 50;
+        }
+        .sb.open{ width: 220px; transition: width .2s ease; }
+        .sb.closed{ width: 72px; transition: width .2s ease; }
+
+        .sb-toggle{
+          width: 48px; height: 48px; border-radius: 9999px;
+          border: 1px solid var(--sb-border);
+          background:#fff; color: var(--sb-icon);
+          display:flex; align-items:center; justify-content:center;
+          margin: 4px auto 8px;
+        }
+
+        .sb-nav{ display:flex; flex-direction:column; gap:8px; margin-top: 8px; }
+
+        .sb-item{
+          position: relative;
+          display:flex; align-items:center;
+          gap:12px;
+          padding: 8px;
+          border-radius: 14px;
+          color: var(--sb-icon);
+          text-decoration:none;
+        }
+        .sb-item:hover{ background: var(--sb-hover); }
+        .sb-item.active{ background: var(--sb-active); color:#0e3c2c; }
+
+        .sb-icon{
+          min-width:48px; min-height:48px;
+          width:48px; height:48px;
+          border-radius: 9999px;
+          display:flex; align-items:center; justify-content:center;
+          border: 1px solid var(--sb-border);
+          color: var(--sb-icon);
+          background: #fff;
+          /* 접힌 상태에서 hover 시 원형만 강조 */
+        }
+        .sb.closed .sb-item:hover .sb-icon{
+          background: var(--sb-active);
+          border-color: #dfeae4;
+        }
+
+        .sb-text{ display:flex; flex-direction:column; min-width:0; }
+        .sb-label{ font-weight:600; color:#2f4a40; }
+        .sb-preview{ font-size:12px; color:#7a8b85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        /* 접힌 상태 툴팁 */
+        .sb-tip{
+          position: absolute; left: 64px; top:50%; transform: translateY(-50%);
+          background:#334d43; color:#fff;
+          padding:4px 8px; border-radius:8px; font-size:12px;
+          opacity:0; pointer-events:none; white-space:nowrap;
+          box-shadow: var(--sb-shadow);
+        }
+        .sb.closed .sb-item:hover .sb-tip{ opacity:1; }
+
+        .sb-mobile-close{
+          margin-top: auto;
+          align-self:center;
+          border: 1px solid var(--sb-border);
+          border-radius: 9999px;
+          background:#fff; color:#6b7f77;
+          padding: 6px 12px; font-size:12px;
+        }
+
+        @media(max-width: 768px){
+          .sb{ width: 64px; padding:10px 10px; }
+          .sb.open{ width: 200px; }
+        }
+      `}</style>
+    </aside>
+  )
 }
-
-/* ---------- Icons (모두 같은 뷰박스/스트로크로 중앙정렬) ---------- */
-
-function HomeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function ChatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="M4 4h16v11H9l-5 5V4Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="M4 7h16M9 7V4h6v3m-9 0v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function CalendarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="M7 2v3m10-3v3M3 8h18M5 5h14a2 2 0 0 1 2 2v13H3V7a2 2 0 0 1 2-2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function ChevronRight() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="m9 6 6 6-6 6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function ChevronLeft() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="m15 6-6 6 6 6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="svgi" aria-hidden>
-      <path
-        d="M6 6l12 12M18 6 6 18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/* ---------- CSS ---------- */
-
-const INK = `
-  --ink-1: #0e221c;   /* 아주 진한 */
-  --ink-2: #335a4e;
-  --ink-3: #6c8a80;   /* 기본 아이콘 */
-  --ink-4: #a7b9b3;   /* 비활성 */
-  --ring:  #e8f3ef;   /* 원형 배경 hover */
-  --mint:  #7fb8a6;   /* 포커스 라인 */
-  --active:#0f5a45;   /* 활성 아이콘 */
-  --bg:    #ffffff;
-`;
-
-const styles = (
-  <style jsx>{`
-    ${INK}
-
-    .sidebar {
-      position: fixed;
-      inset: 0 auto 0 0;
-      width: 240px;
-      background: var(--bg);
-      border-right: 1px solid #e9eceb;
-      display: flex;
-      flex-direction: column;
-      padding: 16px 12px;
-      z-index: 60;
-      transition: width 180ms ease;
-    }
-    .sidebar.is-collapsed { width: 72px; }
-    .sidebar.is-hidden { transform: translateX(-100%); }
-
-    .top {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: ${/* 버튼을 왼쪽 정렬 */ ''} flex-start;
-      margin-bottom: 8px;
-    }
-    .toggle {
-      width: 44px; height: 44px;
-      border-radius: 9999px;
-      border: 1px solid #dfe7e4;
-      background: #f6faf8;
-      color: var(--ink-3);
-      display: grid; place-items: center;
-    }
-    .toggle.hide { background: #fff; }
-
-    .nav {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* 공통 버튼 레이아웃: 항상 같은 틀 (정렬 틀어짐 방지) */
-    .itemBtn {
-      position: relative;
-      display: grid;
-      grid-template-columns: 48px 1fr auto;
-      align-items: center;
-      gap: 10px;
-      padding: 2px 6px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: var(--ink-2);
-      min-height: 56px;
-    }
-    .itemBtn.mode-compact {
-      grid-template-columns: 48px;
-      justify-items: center;
-      padding: 2px 0;
-      min-height: 52px;
-    }
-
-    /* 원형 컨테이너 + 아이콘은 완전 중앙 정렬 */
-    .ring {
-      width: 44px; height: 44px;
-      border-radius: 9999px;
-      border: 1px solid #dfe7e4;
-      display: grid; place-items: center;  /* ✔️ 아이콘 정확히 중앙 */
-      background: #fff;
-      transition: background 150ms ease, border-color 150ms ease;
-    }
-    .itemBtn:hover .ring { background: var(--ring); border-color: var(--mint); }
-    .ring-active { background: #e2f4ee; border-color: var(--mint); }
-
-    .ico { display: grid; place-items: center; }
-    .svgi { width: 22px; height: 22px; color: var(--ink-3); }
-    .active .svgi { color: var(--active); }
-
-    .label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--ink-1);
-    }
-    .preview {
-      font-size: 12px;
-      color: var(--ink-4);
-      justify-self: end;
-      padding-right: 8px;
-    }
-
-    /* 접힘 + 호버 툴팁 (아이콘 오른쪽에 살짝 띄우기) */
-    .tooltip {
-      position: absolute;
-      left: 68px;
-      padding: 6px 10px;
-      background: #3a3f3e;
-      color: #fff;
-      font-size: 12px;
-      border-radius: 6px;
-      white-space: nowrap;
-      opacity: 0;
-      transform: translateX(-4px);
-      pointer-events: none;
-      transition: opacity 120ms ease, transform 120ms ease;
-    }
-    .itemBtn.mode-compact:hover .tooltip {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    @media (max-width: 768px) {
-      .sidebar { width: 76vw; max-width: 320px; }
-      .sidebar.is-collapsed { width: 64vw; }
-      .itemBtn { min-height: 54px; }
-      .svgi { width: 22px; height: 22px; }
-    }
-  `}</style>
-);
-
-const fabCSS = (
-  <style jsx>{`
-    :root { ${INK} }
-    .fabOpen {
-      position: fixed;
-      left: 14px;
-      bottom: 18px;
-      width: 48px; height: 48px;
-      border-radius: 9999px;
-      border: 1px solid #dfe7e4;
-      background: #f6faf8;
-      color: var(--ink-3);
-      z-index: 70;
-      display: grid; place-items: center;
-    }
-  `}</style>
-);
-
-const globalPad = (
-  <style jsx global>{`
-    /* 본문은 사이드바 폭만큼 여백 */
-    #page { margin-left: var(--sb-w, 240px); transition: margin-left 180ms ease; }
-    @media (max-width: 768px) {
-      #page { margin-left: 0; } /* 모바일은 오버레이처럼 사용 */
-    }
-  `}</style>
-);

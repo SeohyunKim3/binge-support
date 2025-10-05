@@ -29,14 +29,27 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <Sidebar
-        stats={{
-          dashboardCount: 3,         // 오늘 작성한 조각 수
-          communityCount: 1,         // 커뮤니티 새 글 수
-          trashCount: 0,             // 휴지통 안 글 수
-          todayLabel: '오늘',  // 오늘 날짜나 짧은 요약
-        }}
-      />        {/* Page-flip transition wrapper (client component) */}
+      <Sidebar />
+        <div style={{ marginLeft: 72 /* 접힘폭 */, transition:'margin-left .2s ease' }}>
+          {children}
+        </div>
+
+        {/* 펼쳤을 때 컨텐츠 여백 확장 */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function(){
+              const ro = new ResizeObserver(() => {
+                var sb = document.querySelector('.sb');
+                var main = document.querySelector('body > div[style]');
+                if(!sb||!main) return;
+                main.style.marginLeft = sb.classList.contains('open') ? '220px' : '72px';
+              });
+              var el = document.querySelector('.sb');
+              if(el) ro.observe(el);
+            })();
+          `
+        }} />
+          {/* Page-flip transition wrapper (client component) */}
         <TransitionProvider>
           {children}
         </TransitionProvider>
