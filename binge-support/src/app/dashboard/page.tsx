@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
 import confetti from 'canvas-confetti'
-import Markdown from '@/components/Markdown'
-import DetailsEditor from '@/components/DetailsEditor'
+import Markdown from '@/components/Markdown' // 뷰어만 사용
 
+/* ----------------------------- Types ----------------------------- */
 type Entry = {
   id: string
   user_id: string
@@ -15,170 +15,119 @@ type Entry = {
   is_public: boolean
   is_resolved: boolean
   is_deleted: boolean
-  details_md?: string | null
+  details_md: string | null
 }
 
-type EntryPatch = {
-  id: string
-  content?: string
-  is_public?: boolean
-  is_resolved?: boolean
-  details_md?: string | null
-}
-
+/* ------------ 개별 카드 (읽기 전용. 편집은 별도 페이지) ------------ */
 type RowProps = {
-  it: Entry;
-  idx: number;
-  onRemove: (id: string) => void;
-  onToggleResolved: (id: string, make: boolean) => void;
-  onSaveDetails: (id: string, md: string) => void;
-  compact?: boolean;
-};
+  it: Entry
+  idx: number
+  onRemove: (id: string) => void
+  onToggleResolved: (id: string, make: boolean) => void
+  onTogglePublic: (id: string, make: boolean) => void
+  compact?: boolean
+}
 
-/* ------------------------ 개별 카드 컴포넌트 ------------------------ */
-function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact = false }: RowProps) {
-  const router = useRouter();
+function EntryRow({
+  it,
+  idx,
+  onRemove,
+  onToggleResolved,
+  onTogglePublic,
+  compact = false,
+}: RowProps) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
 
-  // 기존
-  // 로컬 상태(보기/편집/현재 엔트리)
-  const [entry, setEntry] = useState<Entry>(it);
-  const [entries, setEntries] = useState<Entry[]>([])  // ✅ 여기에 선언되어 있어야 함
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-
-  // 부모에서 it이 갱신되면 로컬 상태도 동기화
-  useEffect(() => {
-    function handleUpdated(e: Event) {
-      const detail = (e as CustomEvent).detail as EntryPatch
-      if (!detail?.id) return
-  
-      // entries 상태에서 해당 id만 부분 병합
-      setEntries((prev: Entry[]) =>
-        prev.map((it: Entry) =>
-          it.id === detail.id ? { ...it, ...detail } : it
-        )
-      )
-    }
-  
-    window.addEventListener('entry-updated', handleUpdated as EventListener)
-    return () => {
-      window.removeEventListener('entry-updated', handleUpdated as EventListener)
-    }
-  }, [])
-
-  // 디테일 저장
-  const saveDetails = (md: string) => {
-    onSaveDetails(entry.id, md);
-    setEditing(false);
-    setOpen(true);
-  };
-
-  // 본문 클릭 시: 디테일이 있으면 토글, 없으면 에디터 열기
+  // 본문 클릭 → 디테일(있으면) 토글만
   const handleToggleFromContent = () => {
-    if (editing) return;
-    if (entry.details_md && entry.details_md.trim().length > 0) {
-      setOpen((o) => !o);
-    } else {
-      setEditing(true);
-    }
-  };
+    if (it.details_md && it.details_md.trim().length > 0) setOpen((o) => !o)
+  }
 
   return (
     <li className="item">
       <div className="item-head">
         <span className="item-time">
           조각 #{idx + 1} •{' '}
-          {new Date(entry.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {new Date(it.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
-        <span className={`badge ${entry.is_public ? 'pub' : 'priv'}`}>
-          {entry.is_public ? '공유됨' : '🤫프라이빗'}
+
+        {/* 공개/프라이빗 배지 클릭 → 공개 상태 토글 */}
+        <span
+          role="button"
+          tabIndex={0}
+          className={`badge ${it.is_public ? 'pub' : 'priv'}`}
+          title="클릭해서 공개/비공개 전환"
+          onClick={() => onTogglePublic(it.id, !it.is_public)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onTogglePublic(it.id, !it.is_public)
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          {it.is_public ? '공유됨' : '🤫프라이빗'}
         </span>
       </div>
 
-      {/* 본문 영역(클릭 가능) */}
+      {/* 본문(클릭하면 디테일 토글) */}
       <div
         className="entry-clickable"
         onClick={handleToggleFromContent}
-        title="클릭하여 디테일을 열거나 추가해보세요"
-        style={{ cursor: 'pointer', userSelect: 'text', margin: '8px 0 10px' }}
+        title="디테일이 있다면 클릭해 펼쳐보기"
+        style={{ cursor: it.details_md ? 'pointer' : 'default', userSelect: 'text', margin: '8px 0 10px' }}
       >
         <p className="entry-text" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-          {entry.content}
+          {it.content}
         </p>
-        {!editing && (!entry.details_md || entry.details_md.trim().length === 0) && (
+        {!it.details_md && (
           <div style={{ marginTop: 6, fontSize: 12, color: '#89928a' }}>
-            더 자세히 적고 싶다면 이 글 영역을 눌러보세요 ✏️
+            디테일은 <b>편집</b> 화면에서 작성할 수 있어요 ✏️
           </div>
         )}
       </div>
 
-      {/* 하단 조작 버튼들 */}
+      {/* 하단 조작 버튼 */}
       <div className="row small-btns" style={{ gap: 8 }}>
         <button
           className="btn-mini"
           onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/dashboard/entry/${entry.id}`);
+            e.stopPropagation()
+            router.push(`/dashboard/entry/${it.id}`)
           }}
         >
           편집
         </button>
+
         <button
           className="btn-mini2"
           onClick={(e) => {
-            e.stopPropagation();
-            onRemove(entry.id);
+            e.stopPropagation()
+            onRemove(it.id)
           }}
         >
           삭제
         </button>
-        {/* 해결/미해결 라벨 (삭제 옆 하나만) */}
+
+        {/* 해결/미해결 라벨 (클릭 토글) */}
         <span
           role="button"
           tabIndex={0}
           title="클릭해서 상태 바꾸기"
           onClick={(e) => {
-            e.stopPropagation();
-            onToggleResolved(entry.id, !entry.is_resolved);
+            e.stopPropagation()
+            onToggleResolved(it.id, !it.is_resolved)
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') onToggleResolved(entry.id, !entry.is_resolved);
+            if (e.key === 'Enter') onToggleResolved(it.id, !it.is_resolved)
           }}
-          className={`tag ${entry.is_resolved ? 'tag--ok' : 'tag--todo'}`}
+          className={`tag ${it.is_resolved ? 'tag--ok' : 'tag--todo'}`}
           style={{ marginLeft: 6, cursor: 'pointer' }}
         >
-          {entry.is_resolved ? '완료' : '급해!'}
+          {it.is_resolved ? '완료' : '급해!'}
         </span>
       </div>
 
-      {/* 디테일 편집기 (원하면 이 부분을 실제 DetailsEditor로 교체) */}
-      {editing && (
-        <div style={{ marginTop: 10 }}>
-          {/* DetailsEditor 컴포넌트를 쓰는 경우 */}
-          {/* <DetailsEditor
-            initial={entry.details_md ?? ''}
-            onSave={(text) => saveDetails(text)}
-            onCancel={() => setEditing(false)}
-          /> */}
-
-          {/* 임시 텍스트에어리어 예시 (DetailsEditor 없을 때) */}
-          <textarea
-            defaultValue={entry.details_md ?? ''}
-            rows={6}
-            style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}
-            onBlur={(e) => saveDetails(e.currentTarget.value)}
-          />
-          <div style={{ marginTop: 6, fontSize: 12, color: '#888' }}>
-            포커스를 벗어나면 자동 저장합니다
-          </div>
-        </div>
-      )}
-
-      {/* 디테일 뷰어 */}
-      {!editing && entry.details_md && open && (
+      {/* 디테일 뷰어(보기 전용) */}
+      {it.details_md && open && (
         <div
           style={{
             marginTop: 12,
@@ -189,32 +138,16 @@ function EntryRow({ it, idx, onRemove, onToggleResolved, onSaveDetails, compact 
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Markdown 컴포넌트가 있으면 사용하세요 */}
-          {/* <Markdown content={entry.details_md} /> */}
-          <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{entry.details_md}</div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-            <button
-              className="btn-mini"
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(true);
-              }}
-            >
-              디테일 수정
-            </button>
-          </div>
+          <Markdown content={it.details_md} />
         </div>
       )}
     </li>
-  );
+  )
 }
 
 /* ------------------------------ 페이지 ------------------------------ */
 export default function DashboardPage() {
   const router = useRouter()
-
-  
 
   const [username, setUsername] = useState('')
   const [content, setContent] = useState('')
@@ -233,10 +166,7 @@ export default function DashboardPage() {
 
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false)
 
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  
-
+  /* ------------------ 초기 로드 ------------------ */
   useEffect(() => {
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -246,7 +176,39 @@ export default function DashboardPage() {
     })()
   }, [router])
 
-  // 로컬 타임존 YYYY-MM-DD
+  /* ------------------ Realtime 구독 ------------------ */
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      channel = supabase
+        .channel('entries-realtime')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'entries',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const row = payload.new as Entry
+            setEntries(prev => prev.some(e => e.id === row.id) ? prev : [row, ...prev])
+          }
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const row = payload.new as Entry
+            setEntries(prev => prev.map(e => e.id === row.id ? { ...e, ...row } : e))
+          }
+          if (payload.eventType === 'DELETE' && payload.old) {
+            const oldId = (payload.old as { id: string }).id
+            setEntries(prev => prev.filter(e => e.id !== oldId))
+          }
+        })
+        .subscribe()
+    })()
+    return () => { if (channel) supabase.removeChannel(channel) }
+  }, [])
+
+  /* ------------------ helpers ------------------ */
   function todayLocalKey() {
     const d = new Date()
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
@@ -263,7 +225,7 @@ export default function DashboardPage() {
     if (error || !data) return
 
     setUsername(data.username ?? '')
-    setNeedName(!data.username)   // ✅ 이름 없으면 이름 설정 모드
+    setNeedName(!data.username)
 
     let s = data.seeds ?? 0
     let f = data.flowers ?? 0
@@ -273,8 +235,7 @@ export default function DashboardPage() {
       f = f + add
       await supabase.from('profiles').update({ seeds: s, flowers: f }).eq('id', userId)
     }
-    setSeeds(s)
-    setFlowers(f)
+    setSeeds(s); setFlowers(f)
 
     const last: string | null = data.last_collected ?? null
     const today = todayLocalKey()
@@ -287,11 +248,12 @@ export default function DashboardPage() {
     if (!user) return
 
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.8 }, colors: ['#a7d7a9', '#7fc8a9', '#e2f1e7', '#8fcbbc'] })
-    const today = todayLocalKey()
 
+    const today = todayLocalKey()
     const nextSeeds = seeds + 1
     let newSeeds = nextSeeds
     let newFlowers = flowers
+
     if (nextSeeds >= 7) {
       const add = Math.floor(nextSeeds / 7)
       newFlowers += add
@@ -326,71 +288,44 @@ export default function DashboardPage() {
     [entries]
   )
 
-  async function updateDetails(entryId: string, md: string) {
-    const { error } = await supabase.from('entries').update({ details_md: md }).eq('id', entryId)
-    if (error) { alert(error.message); return }
-    setEntries((prev) => prev.map((e) => (e.id === entryId ? { ...e, details_md: md } : e)))
-
-    window.dispatchEvent(
-      new CustomEvent('entry-updated', {
-        detail: { id: entryId, details_md: md } as EntryPatch,
-      })
-    )
-  
-    setExpandedId(null)
-  }
-
-  
-
+  /* ------------------ actions (낙관적 업데이트) ------------------ */
   async function createEntry() {
     const text = content.trim()
     if (!text) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    // 서버에 맡김 (INSERT 후 Realtime이 목록에 넣어줌)
     const { error } = await supabase.from('entries').insert({ user_id: user.id, content: text, is_public: publish })
     if (error) return alert(error.message)
-    setContent('')
-    setPublish(false)
-    await loadEntries(user.id)
+    setContent(''); setPublish(false)
   }
 
   async function removeEntry(id: string) {
     if (!confirm('기록을 지울까요?')) return
+    const snapshot = entries
+    setEntries(prev => prev.filter(e => e.id !== id))
     const { error } = await supabase.from('entries').update({ is_deleted: true }).eq('id', id)
-    if (!error) setEntries((prev) => prev.filter((e) => e.id !== id))
+    if (error) { setEntries(snapshot); alert(error.message) }
   }
 
   async function toggleResolved(id: string, makeResolved: boolean) {
+    const snapshot = entries
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, is_resolved: makeResolved } : e))
     const { error } = await supabase.from('entries').update({ is_resolved: makeResolved }).eq('id', id)
-    if (!error) {
-      setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, is_resolved: makeResolved } : e)))
-      if (makeResolved) {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#9be2b0', '#7fc8a9', '#4b8a70', '#e8f7ec'] })
-      }
+    if (error) { setEntries(snapshot); alert(error.message) }
+    else if (makeResolved) {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#9be2b0', '#7fc8a9', '#4b8a70', '#e8f7ec'] })
     }
   }
 
-  // 이름 저장
-  async function saveDisplayName() {
-    setNameError(null)
-    const raw = nameInput.trim()
-    if (raw.length < 2 || raw.length > 20) { setNameError('이름은 2~20자 사이로 입력해 주세요.'); return }
-    setNameSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setNameSaving(false); return }
-
-    const { data: taken } = await supabase.from('profiles').select('id').eq('username', raw).maybeSingle()
-    if (taken && taken.id !== user.id) { setNameSaving(false); setNameError('이미 사용 중인 이름이에요.'); return }
-
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, username: raw }, { onConflict: 'id' })
-    setNameSaving(false)
-    if (error) { setNameError(error.message); return }
-
-    setUsername(raw)
-    setNeedName(false)
+  async function togglePublic(id: string, makePublic: boolean) {
+    const snapshot = entries
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, is_public: makePublic } : e))
+    const { error } = await supabase.from('entries').update({ is_public: makePublic }).eq('id', id)
+    if (error) { setEntries(snapshot); alert(error.message) }
   }
 
-  // 날짜 그룹화
+  /* ------------------ 날짜 그룹화 ------------------ */
   function toDateKey(iso: string, tz = Intl.DateTimeFormat().resolvedOptions().timeZone) {
     const d = new Date(iso)
     const y = new Intl.DateTimeFormat('en-CA', { year: 'numeric', timeZone: tz }).format(d)
@@ -444,7 +379,20 @@ export default function DashboardPage() {
               />
               <button
                 disabled={nameSaving}
-                onClick={saveDisplayName}
+                onClick={async () => {
+                  setNameError(null)
+                  const raw = nameInput.trim()
+                  if (raw.length < 2 || raw.length > 20) { setNameError('이름은 2~20자 사이로 입력해 주세요.'); return }
+                  setNameSaving(true)
+                  const { data: { user } } = await supabase.auth.getUser()
+                  if (!user) { setNameSaving(false); return }
+                  const { data: taken } = await supabase.from('profiles').select('id').eq('username', raw).maybeSingle()
+                  if (taken && taken.id !== user.id) { setNameSaving(false); setNameError('이미 사용 중인 이름이에요.'); return }
+                  const { error } = await supabase.from('profiles').upsert({ id: user.id, username: raw }, { onConflict: 'id' })
+                  setNameSaving(false)
+                  if (error) { setNameError(error.message); return }
+                  setUsername(raw); setNeedName(false)
+                }}
                 style={{ padding: '10px 18px', border: 'none', borderRadius: 9999, background: 'linear-gradient(135deg, #6DD5FA, #2980B9)', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: nameSaving ? 0.7 : 1 }}
               >
                 {nameSaving ? '저장중...' : '저장'}
@@ -515,7 +463,7 @@ export default function DashboardPage() {
                         compact
                         onRemove={removeEntry}
                         onToggleResolved={toggleResolved}
-                        onSaveDetails={updateDetails}
+                        onTogglePublic={togglePublic}
                       />
                     ))}
                   </ul>
@@ -534,7 +482,7 @@ export default function DashboardPage() {
                             idx={idx}
                             onRemove={removeEntry}
                             onToggleResolved={toggleResolved}
-                            onSaveDetails={updateDetails}
+                            onTogglePublic={togglePublic}
                           />
                         ))}
                       </ul>

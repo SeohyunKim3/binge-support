@@ -1,23 +1,20 @@
-'use client'
-
-import React from 'react'
-import ReactMarkdown from 'react-markdown'
+'use client';
+import ReactMarkdown from 'react-markdown';
 
 export default function Markdown({ content }: { content: string }) {
   return (
     <div
       style={{
-        background: '#f9faf9',
-        padding: '12px 16px',
-        borderRadius: '8px',
-        border: '1px solid #e3e8e3',
-        fontSize: '14px',
+        background: '#f9fafb',
+        border: '1px solid #e5e7eb',
+        borderRadius: 8,
+        padding: '12px 14px',
+        fontSize: 14,
         lineHeight: 1.6,
         whiteSpace: 'pre-wrap',
-        color: '#2d2d2d',
       }}
     >
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <ReactMarkdown>{content || ''}</ReactMarkdown>
     </div>
-  )
+  );
 }

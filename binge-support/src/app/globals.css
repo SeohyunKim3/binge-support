@@ -1,7 +1,7 @@
 /* ========= Soft, nurturing, minimal theme ========= */
 
 :root {
-  --bg: #f6f7f9;                 /* app background */
+  --bg: #ffffff;                 /* app background */
   --paper: #ffffff;              /* cards / surfaces */
   --ink: #1f2937;                /* primary text */
   --ink-dim: #6b7280;            /* secondary text */
