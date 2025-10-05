@@ -18,6 +18,14 @@ type Entry = {
   details_md: string | null
 }
 
+type EntryPatch = Partial<{
+  id: string
+  content: string
+  is_public: boolean
+  is_resolved: boolean
+  details_md: string | null
+}>
+
 /* ------------ 개별 카드 (읽기 전용. 편집은 별도 페이지) ------------ */
 type RowProps = {
   it: Entry
@@ -38,6 +46,13 @@ function EntryRow({
 }: RowProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [entry, setEntry] = useState<Entry>(it);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setEntry(it)
+  }, [it])
 
   // 본문 클릭 → 디테일(있으면) 토글만
   const handleToggleFromContent = () => {
@@ -165,6 +180,21 @@ export default function DashboardPage() {
   const [nameError, setNameError] = useState<string | null>(null)
 
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false)
+
+
+
+  // 대시보드 전역 리스너 (컴포넌트 최상단 useEffect들 옆)
+  useEffect(() => {
+    function handleUpdated(e: Event) {
+      const patch = (e as CustomEvent).detail as EntryPatch
+      if (!patch?.id) return
+      setEntries(prev =>
+        prev.map(it => it.id === patch.id ? { ...it, ...patch } : it)
+      )
+    }
+    window.addEventListener('entry-updated', handleUpdated as EventListener)
+    return () => window.removeEventListener('entry-updated', handleUpdated as EventListener)
+  }, [])
 
   /* ------------------ 초기 로드 ------------------ */
   useEffect(() => {
