@@ -31,7 +31,6 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* 사이드바 */}
         <Sidebar />
-
         {/* 콘텐츠는 딱 한 번만 렌더링 */}
         <div id="app-main" style={{ marginLeft: 72, transition: "margin-left .2s ease" }}>
           <TransitionProvider>{children}</TransitionProvider>
@@ -68,7 +67,7 @@ export default function RootLayout({
             backdropFilter: "blur(10px)",
           }}
         >
-          © SoulKim 2025
+          © SoulKim 2025.
         </footer>
       </body>
     </html>
